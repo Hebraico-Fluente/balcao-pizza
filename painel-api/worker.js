@@ -15,6 +15,11 @@
  *   POST /admin/selo             {"tel","delta":+1|-1,"motivo"}
  *   POST /admin/resgate          {"tel"}   usa um cartão cheio (desconta a meta)
  *   GET  /admin/clientes         números com selos (ranking)
+ *   GET  /admin/estoque                 itens do estoque (com aviso de "acabando")
+ *   POST /admin/estoque/item            {"id"?, "nome", "unidade", "minimo", "categoria"}  cria ou edita
+ *   POST /admin/estoque/mov             {"id", "tipo": "entrada"|"saida"|"contagem", "qtd", "motivo"?}
+ *   POST /admin/estoque/remover         {"id"}   tira o item da lista (o histórico fica)
+ *   GET  /admin/estoque/historico?id=   últimos movimentos de um item
  *
  * Regras:
  *   - O selo entra SÓ quando a pizzaria marca o pedido como "retirado" (nunca no envio),
@@ -41,6 +46,8 @@ const STATUS = ["novo", "preparo", "pronto", "retirado", "cancelado"];
 const ID_RE = /^B\d{4}-\d{4}-[A-Z0-9]{4}$/;
 const MAX_PEDIDOS_POR_IP_HORA = 12;
 const MAX_CONSULTAS_POR_IP_HORA = 10;
+const UNIDADES = ["kg", "g", "L", "ml", "un", "cx", "pct", "lata", "maço", "botijão"];
+const CATEGORIAS = ["Massa", "Queijos", "Recheios", "Molhos e temperos", "Bebidas", "Embalagens", "Limpeza", "Outros"];
 
 /* ---------- utilidades ---------- */
 /** Origens aceitas: o site no GitHub Pages e o site na Cloudflare da MESMA conta
@@ -120,6 +127,23 @@ export function montarPedido(b) {
     obs: String(b.obs || "").slice(0, 300),
   };
 }
+
+
+/* ---------- estoque ---------- */
+const num = v => { const n = Number(String(v ?? "").replace(",", ".")); return Number.isFinite(n) ? Math.round(n * 1000) / 1000 : NaN; };
+export function validarItem(b) {
+  const nome = String(b.nome || "").trim().replace(/\s+/g, " ").slice(0, 50);
+  if (nome.length < 2) throw new Error("nome do item");
+  if (!UNIDADES.includes(b.unidade)) throw new Error("unidade");
+  const minimo = num(b.minimo ?? 0);
+  if (!(minimo >= 0) || minimo > 100000) throw new Error("mínimo");
+  const categoria = CATEGORIAS.includes(b.categoria) ? b.categoria : "Outros";
+  return { nome, unidade: b.unidade, minimo, categoria };
+}
+async function itemPorId(env, id) {
+  return env.DB.prepare("SELECT * FROM estoque_itens WHERE id = ? AND ativo = 1").bind(Number(id) || 0).first();
+}
+const comAviso = it => ({ ...it, ativo: undefined, acabando: it.quantidade <= it.minimo });
 
 export async function handle(req, env) {
   const url = new URL(req.url), path = url.pathname;
@@ -221,6 +245,62 @@ export async function handle(req, env) {
         (SELECT nome FROM pedidos p WHERE p.tel = s.tel ORDER BY criado_em DESC LIMIT 1) AS nome
       FROM selos s GROUP BY s.tel HAVING SUM(s.delta) > 0 ORDER BY selos DESC, ultimo DESC LIMIT 200`).all();
     return json(req, { meta: META_SELOS, clientes: results });
+  }
+
+  if (req.method === "GET" && path === "/admin/estoque") {
+    const { results } = await env.DB.prepare("SELECT * FROM estoque_itens WHERE ativo = 1 ORDER BY categoria, nome").all();
+    return json(req, { unidades: UNIDADES, categorias: CATEGORIAS, itens: results.map(comAviso) });
+  }
+
+  if (req.method === "POST" && path === "/admin/estoque/item") {
+    const b = await req.json().catch(() => ({}));
+    let it; try { it = validarItem(b); } catch (e) { return json(req, { error: "Confira: " + e.message }, 400); }
+    if (b.id) {
+      const atual = await itemPorId(env, b.id);
+      if (!atual) return json(req, { error: "item não existe" }, 404);
+      await env.DB.prepare("UPDATE estoque_itens SET nome=?, unidade=?, minimo=?, categoria=?, atualizado_em=? WHERE id=?")
+        .bind(it.nome, it.unidade, it.minimo, it.categoria, agora(), atual.id).run();
+      return json(req, { ok: true, item: comAviso(await itemPorId(env, atual.id)) });
+    }
+    const dup = await env.DB.prepare("SELECT id FROM estoque_itens WHERE ativo = 1 AND lower(nome) = lower(?)").bind(it.nome).first();
+    if (dup) return json(req, { error: "Já existe um item com esse nome." }, 409);
+    const qtd = num(b.quantidade ?? 0);
+    if (!(qtd >= 0)) return json(req, { error: "Confira: quantidade" }, 400);
+    await env.DB.prepare("INSERT INTO estoque_itens (nome, unidade, quantidade, minimo, categoria, ativo, atualizado_em) VALUES (?,?,?,?,?,1,?)")
+      .bind(it.nome, it.unidade, qtd, it.minimo, it.categoria, agora()).run();
+    const novo = await env.DB.prepare("SELECT * FROM estoque_itens WHERE ativo = 1 AND nome = ?").bind(it.nome).first();
+    if (qtd > 0) await env.DB.prepare("INSERT INTO estoque_mov (item_id, delta, saldo, tipo, motivo, criado_em) VALUES (?,?,?,?,?,?)")
+      .bind(novo.id, qtd, qtd, "contagem", "cadastro", agora()).run();
+    return json(req, { ok: true, item: comAviso(novo) });
+  }
+
+  if (req.method === "POST" && path === "/admin/estoque/mov") {
+    const b = await req.json().catch(() => ({}));
+    const it = await itemPorId(env, b.id);
+    if (!it) return json(req, { error: "item não existe" }, 404);
+    const q = num(b.qtd);
+    if (!["entrada", "saida", "contagem"].includes(b.tipo) || !(q >= 0) || q > 100000 || (b.tipo !== "contagem" && q === 0))
+      return json(req, { error: "Confira a quantidade." }, 400);
+    const novoSaldo = Math.round((b.tipo === "entrada" ? it.quantidade + q : b.tipo === "saida" ? it.quantidade - q : q) * 1000) / 1000;
+    if (novoSaldo < 0) return json(req, { error: `Só há ${it.quantidade} ${it.unidade} de ${it.nome}.` }, 400);
+    await env.DB.prepare("UPDATE estoque_itens SET quantidade = ?, atualizado_em = ? WHERE id = ?").bind(novoSaldo, agora(), it.id).run();
+    await env.DB.prepare("INSERT INTO estoque_mov (item_id, delta, saldo, tipo, motivo, criado_em) VALUES (?,?,?,?,?,?)")
+      .bind(it.id, Math.round((novoSaldo - it.quantidade) * 1000) / 1000, novoSaldo, b.tipo, String(b.motivo || "").slice(0, 80), agora()).run();
+    return json(req, { ok: true, item: comAviso(await itemPorId(env, it.id)) });
+  }
+
+  if (req.method === "POST" && path === "/admin/estoque/remover") {
+    const b = await req.json().catch(() => ({}));
+    const it = await itemPorId(env, b.id);
+    if (!it) return json(req, { error: "item não existe" }, 404);
+    await env.DB.prepare("UPDATE estoque_itens SET ativo = 0, atualizado_em = ? WHERE id = ?").bind(agora(), it.id).run();
+    return json(req, { ok: true });
+  }
+
+  if (req.method === "GET" && path === "/admin/estoque/historico") {
+    const id = Number(url.searchParams.get("id")) || 0;
+    const { results } = await env.DB.prepare("SELECT delta, saldo, tipo, motivo, criado_em FROM estoque_mov WHERE item_id = ? ORDER BY id DESC LIMIT 50").bind(id).all();
+    return json(req, { movimentos: results });
   }
 
   return json(req, { error: "não encontrado" }, 404);

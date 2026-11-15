@@ -34,3 +34,27 @@ CREATE TABLE IF NOT EXISTS consultas (
   criado_em TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS consultas_ip ON consultas (ip, criado_em);
+
+-- Estoque: um item por insumo (farinha, mussarela, caixas...) e cada movimento registrado.
+CREATE TABLE IF NOT EXISTS estoque_itens (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  nome          TEXT NOT NULL,
+  unidade       TEXT NOT NULL,         -- kg, g, L, ml, un, cx, pct, lata, maço, botijão
+  quantidade    REAL NOT NULL DEFAULT 0,
+  minimo        REAL NOT NULL DEFAULT 0, -- abaixo disso aparece como "acabando"
+  categoria     TEXT NOT NULL DEFAULT 'Outros',
+  ativo         INTEGER NOT NULL DEFAULT 1,
+  atualizado_em TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS estoque_itens_ativo ON estoque_itens (ativo, categoria, nome);
+
+CREATE TABLE IF NOT EXISTS estoque_mov (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_id   INTEGER NOT NULL,
+  delta     REAL NOT NULL,             -- quanto mudou (+ entrada, - saída)
+  saldo     REAL NOT NULL,             -- quanto ficou depois
+  tipo      TEXT NOT NULL,             -- entrada | saida | contagem
+  motivo    TEXT,
+  criado_em TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS estoque_mov_item ON estoque_mov (item_id, id);

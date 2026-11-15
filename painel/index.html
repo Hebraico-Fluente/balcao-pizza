@@ -96,6 +96,46 @@ main{padding:18px 16px 60px;max-width:1400px;margin:0 auto}
 .ord-f{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .ord-f .total{margin-right:auto;font-weight:700;font-variant-numeric:tabular-nums}
 
+/* estoque */
+.wrap3{max-width:980px;margin:0 auto}
+.stk-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.stk-bar input.in{flex:1;min-width:180px;height:44px}
+.stk-alert{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-radius:12px;background:var(--red-soft);color:var(--red);font-weight:600;font-size:14px;margin-bottom:16px}
+.stk-cat{margin:22px 0 8px;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stk{display:grid;gap:8px}
+.it{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--card);box-shadow:0 0 0 1px var(--line)}
+.it.low{box-shadow:0 0 0 1.5px var(--red)}
+.it-n{min-width:0}
+.it-n button{display:block;max-width:100%;padding:0;border:0;background:none;text-align:left;cursor:pointer;font-weight:600;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.it-n small{display:block;color:var(--muted);font-size:12.5px}
+.it-n .tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--red-soft);color:var(--red);font-size:11.5px;font-weight:600;vertical-align:1px}
+.it-q{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.it-q b{font-size:20px}
+.it-q span{color:var(--muted);font-size:13px;margin-left:3px}
+.it.low .it-q b{color:var(--red)}
+.it-a{display:flex;gap:6px}
+.it-a .btn{min-width:44px;padding:0 10px}
+@media(max-width:600px){.it{grid-template-columns:minmax(0,1fr) auto}.it-a{grid-column:1/-1}.it-a .btn{flex:1}}
+dialog.dlg{width:min(460px,100% - 24px);border:0;border-radius:16px;padding:0;background:var(--card);color:var(--ink);box-shadow:0 30px 80px -20px rgba(0,0,0,.45)}
+dialog.dlg::backdrop{background:rgba(30,22,17,.45)}
+.dlg form{display:grid;gap:12px;padding:22px}
+.dlg h3{margin:0;font:400 26px/1.15 var(--serif)}
+.dlg label{display:grid;gap:5px;font-size:13px;font-weight:500;color:var(--muted)}
+.dlg select.in{height:48px;padding:0 12px;border-radius:8px;border:1px solid var(--line-2);background:var(--white);font-size:16px}
+.dlg .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dlg .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
+.dlg .acts .left{margin-right:auto}
+.dlg .hist{margin:6px 0 0;max-height:190px;overflow:auto}
+.seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:10px;background:var(--bg-2)}
+.seg3 label{display:block}
+.seg3 input{position:absolute;opacity:0;width:1px;height:1px}
+.seg3 span{display:grid;place-items:center;min-height:40px;border-radius:8px;font-weight:600;font-size:13.5px;color:var(--muted);cursor:pointer}
+.seg3 input:checked+span{background:var(--white);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.seg3 input:focus-visible+span{outline:2px solid var(--wine)}
+.preview{margin:0;font-size:14px;color:var(--muted)}
+.preview b{color:var(--ink)}
+.shop{white-space:pre-wrap;margin:0;padding:12px 14px;border-radius:10px;background:var(--white);box-shadow:inset 0 0 0 1px var(--line);font:400 14px/1.55 var(--sans);max-height:260px;overflow:auto}
+
 /* selos */
 .wrap2{max-width:760px;margin:0 auto}
 .search{display:flex;gap:8px;margin-bottom:18px}
@@ -149,6 +189,7 @@ main{padding:18px 16px 60px;max-width:1400px;margin:0 auto}
       <button type="button" role="tab" data-tab="pedidos" aria-selected="true">Pedidos<span class="n" id="nOpen" hidden>0</span></button>
       <button type="button" role="tab" data-tab="selos" aria-selected="false">Selos</button>
       <button type="button" role="tab" data-tab="clientes" aria-selected="false">Clientes</button>
+      <button type="button" role="tab" data-tab="estoque" aria-selected="false">Estoque<span class="n" id="nLow" hidden>0</span></button>
     </nav>
   </header>
   <div class="demo-bar" id="demoBar" hidden>Modo demonstração: dados de exemplo, nada é salvo. Um pedido novo chega a cada 40 segundos.</div>
@@ -169,8 +210,47 @@ main{padding:18px 16px 60px;max-width:1400px;margin:0 auto}
     <section id="t-clientes" hidden>
       <div class="wrap2"><div class="card" style="padding:6px 0"><ul class="rank" id="rank"></ul></div></div>
     </section>
+    <section id="t-estoque" hidden>
+      <div class="wrap3">
+        <div class="stk-bar">
+          <input class="in" id="stkQ" type="search" placeholder="Buscar item…" aria-label="Buscar item do estoque">
+          <div class="seg" role="group" aria-label="Filtro do estoque"><button type="button" data-sf="todos" aria-pressed="true">Todos</button><button type="button" data-sf="baixo" aria-pressed="false">Acabando</button></div>
+          <button class="btn b-wine" type="button" id="stkNew">+ Novo item</button>
+        </div>
+        <div id="stkAlert"></div>
+        <div id="stkList"></div>
+      </div>
+    </section>
   </main>
 </div>
+<dialog class="dlg" id="dlgItem"><form method="dialog" id="itemForm" novalidate>
+  <h3 id="itemTitle">Novo item</h3>
+  <label>Nome<input class="in" name="nome" maxlength="50" placeholder="Ex.: Farinha tipo 00" required></label>
+  <div class="row"><label>Unidade<select class="in" name="unidade"></select></label><label>Categoria<select class="in" name="categoria"></select></label></div>
+  <div class="row"><label id="qtdWrap">Quantidade agora<input class="in" name="quantidade" inputmode="decimal" placeholder="0"></label><label>Avisar quando ficar abaixo de<input class="in" name="minimo" inputmode="decimal" placeholder="0"></label></div>
+  <p class="err" id="itemErr" role="alert"></p>
+  <div class="acts"><button class="btn b-ghost b-sm left" type="button" id="itemDel" hidden>Remover item</button><button class="btn b-line" type="button" data-close>Cancelar</button><button class="btn b-wine" type="submit">Salvar</button></div>
+</form></dialog>
+<dialog class="dlg" id="dlgMov"><form method="dialog" id="movForm" novalidate>
+  <h3 id="movTitle">Movimentar</h3>
+  <div class="seg3" role="radiogroup" aria-label="Tipo de movimento">
+    <label><input type="radio" name="tipo" value="entrada" checked><span>Chegou</span></label>
+    <label><input type="radio" name="tipo" value="saida"><span>Usei</span></label>
+    <label><input type="radio" name="tipo" value="contagem"><span>Contei</span></label>
+  </div>
+  <label id="movQtdLbl">Quantidade<input class="in" name="qtd" inputmode="decimal" placeholder="0"></label>
+  <label>Observação (opcional)<input class="in" name="motivo" maxlength="80" placeholder="Ex.: compra do fornecedor"></label>
+  <p class="preview" id="movPrev"></p>
+  <p class="err" id="movErr" role="alert"></p>
+  <div class="acts"><button class="btn b-ghost b-sm left" type="button" id="movEdit">Editar item</button><button class="btn b-line" type="button" data-close>Cancelar</button><button class="btn b-wine" type="submit">Salvar</button></div>
+  <ul class="hist" id="movHist"></ul>
+</form></dialog>
+<dialog class="dlg" id="dlgShop"><form method="dialog">
+  <h3>Lista de compras</h3>
+  <p class="preview">Itens abaixo do mínimo, com a quantidade sugerida para voltar ao dobro do mínimo. Confira antes de mandar.</p>
+  <pre class="shop" id="shopTxt"></pre>
+  <div class="acts"><button class="btn b-line" type="button" data-close>Fechar</button><button class="btn b-line" type="button" id="shopCopy">Copiar</button><a class="btn b-wa" id="shopWa" target="_blank" rel="noopener">Mandar no WhatsApp</a></div>
+</form></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -305,13 +385,110 @@ async function loadRank(){
 }
 $("#rank").addEventListener("click", e => { const b = e.target.closest("[data-tel]"); if (b) { tab("selos"); openClient(b.dataset.tel); } });
 
+/* ---------- estoque ---------- */
+let STK = { itens: [], unidades: [], categorias: [] }, stkFiltro = "todos", movItem = null;
+const fmtQ = n => Number(n).toLocaleString("pt-BR", { maximumFractionDigits: 3 });
+const parseQ = v => { const n = Number(String(v ?? "").trim().replace(/\./g, "").replace(",", ".")); return String(v ?? "").trim() === "" ? NaN : n; };
+const sugestao = it => { const alvo = Math.max(it.minimo * 2, it.minimo + 1), f = ["un","cx","pct","lata","maço","botijão"].includes(it.unidade); const q = alvo - it.quantidade; return f ? Math.ceil(q) : Math.ceil(q * 10) / 10; };
+async function loadStock(silent){
+  try { STK = await call("GET", "/admin/estoque"); renderStock(); }
+  catch (e) { if (!silent) toast(e.message); }
+}
+function renderStock(){
+  const low = STK.itens.filter(i => i.acabando);
+  $("#nLow").hidden = !low.length; $("#nLow").textContent = low.length;
+  $("#stkAlert").innerHTML = low.length ? `<div class="stk-alert"><span>${low.length} ite${low.length > 1 ? "ns" : "m"} acabando</span><button class="btn b-sm b-wine" type="button" id="stkShop">Lista de compras</button></div>` : "";
+  const q = $("#stkQ").value.trim().toLowerCase();
+  const l = STK.itens.filter(i => (stkFiltro === "todos" || i.acabando) && (!q || i.nome.toLowerCase().includes(q)));
+  if (!STK.itens.length) { $("#stkList").innerHTML = `<div class="empty">Nenhum item ainda. Toque em <b>+ Novo item</b> e cadastre o que a pizzaria usa: farinha, queijos, caixas…</div>`; return; }
+  if (!l.length) { $("#stkList").innerHTML = `<div class="empty">Nenhum item encontrado.</div>`; return; }
+  const cats = [...new Set(l.map(i => i.categoria))];
+  $("#stkList").innerHTML = cats.map(c => `<h3 class="stk-cat">${esc(c)}</h3><div class="stk">${l.filter(i => i.categoria === c).map(i => `
+    <div class="it ${i.acabando ? "low" : ""}" data-id="${i.id}">
+      <div class="it-n"><button type="button" data-mov>${esc(i.nome)}${i.acabando ? `<span class="tag">acabando</span>` : ""}</button><small>mínimo ${fmtQ(i.minimo)} ${esc(i.unidade)} · ${dia(i.atualizado_em)}</small></div>
+      <div class="it-q"><b>${fmtQ(i.quantidade)}</b><span>${esc(i.unidade)}</span></div>
+      <div class="it-a"><button class="btn b-line b-sm" type="button" data-q="-1" aria-label="Usei 1 ${esc(i.unidade)} de ${esc(i.nome)}">−1</button><button class="btn b-line b-sm" type="button" data-q="1" aria-label="Chegou 1 ${esc(i.unidade)} de ${esc(i.nome)}">+1</button><button class="btn b-wine b-sm" type="button" data-mov>Movimentar</button></div>
+    </div>`).join("")}</div>`).join("");
+}
+async function mov(id, tipo, qtd, motivo){
+  const r = await call("POST", "/admin/estoque/mov", { id, tipo, qtd, motivo });
+  const k = STK.itens.findIndex(x => x.id === r.item.id); if (k >= 0) STK.itens[k] = r.item; renderStock(); return r.item;
+}
+$("#stkList").addEventListener("click", async e => {
+  const row = e.target.closest("[data-id]"); if (!row) return; const it = STK.itens.find(x => x.id === +row.dataset.id);
+  const q = e.target.closest("[data-q]");
+  if (q) { q.disabled = true; try { const n = await mov(it.id, +q.dataset.q > 0 ? "entrada" : "saida", 1, "ajuste rápido"); toast(`${n.nome}: ${fmtQ(n.quantidade)} ${n.unidade}`); } catch (err) { toast(err.message); } q.disabled = false; return; }
+  if (e.target.closest("[data-mov]")) openMov(it);
+});
+$("#stkAlert").addEventListener("click", e => { if (e.target.closest("#stkShop")) openShop(); });
+$("#stkQ").addEventListener("input", renderStock);
+$$("[data-sf]").forEach(b => b.addEventListener("click", () => { stkFiltro = b.dataset.sf; $$("[data-sf]").forEach(x => x.setAttribute("aria-pressed", x === b)); renderStock(); }));
+$$("dialog [data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
+
+function openItem(it){
+  const f = $("#itemForm"); f.reset(); $("#itemErr").textContent = "";
+  f.unidade.innerHTML = STK.unidades.map(u => `<option>${u}</option>`).join("");
+  f.categoria.innerHTML = STK.categorias.map(c => `<option>${c}</option>`).join("");
+  $("#itemTitle").textContent = it ? "Editar item" : "Novo item"; $("#itemDel").hidden = !it; $("#qtdWrap").hidden = !!it;
+  if (it) { f.nome.value = it.nome; f.unidade.value = it.unidade; f.categoria.value = it.categoria; f.minimo.value = fmtQ(it.minimo); }
+  f.dataset.id = it ? it.id : ""; $("#dlgItem").showModal(); f.nome.focus();
+}
+$("#stkNew").addEventListener("click", () => openItem(null));
+$("#itemForm").addEventListener("submit", async e => {
+  e.preventDefault(); const f = e.target, err = $("#itemErr"); err.textContent = "";
+  const minimo = f.minimo.value.trim() ? parseQ(f.minimo.value) : 0, quantidade = f.quantidade.value.trim() ? parseQ(f.quantidade.value) : 0;
+  if (f.nome.value.trim().length < 2) { err.textContent = "Digite o nome do item."; return f.nome.focus(); }
+  if (!(minimo >= 0) || !(quantidade >= 0)) { err.textContent = "Use só números, por exemplo 2,5."; return; }
+  try {
+    await call("POST", "/admin/estoque/item", { id: f.dataset.id ? +f.dataset.id : undefined, nome: f.nome.value, unidade: f.unidade.value, categoria: f.categoria.value, minimo, quantidade });
+    $("#dlgItem").close(); toast("Item salvo"); loadStock(true);
+  } catch (x) { err.textContent = x.message; }
+});
+$("#itemDel").addEventListener("click", async () => {
+  const id = +$("#itemForm").dataset.id, it = STK.itens.find(x => x.id === id);
+  if (!confirm(`Remover "${it.nome}" do estoque? O histórico fica guardado.`)) return;
+  try { await call("POST", "/admin/estoque/remover", { id }); $("#dlgItem").close(); toast("Item removido"); loadStock(true); } catch (x) { toast(x.message); }
+});
+
+function movPreview(){
+  const f = $("#movForm"), it = movItem, q = parseQ(f.qtd.value), t = f.tipo.value;
+  $("#movQtdLbl").firstChild.textContent = t === "contagem" ? `Quanto tem agora (${it.unidade})` : t === "entrada" ? `Quanto chegou (${it.unidade})` : `Quanto usou ou perdeu (${it.unidade})`;
+  if (!(q >= 0)) return $("#movPrev").innerHTML = `Agora: <b>${fmtQ(it.quantidade)} ${esc(it.unidade)}</b>`;
+  const n = t === "entrada" ? it.quantidade + q : t === "saida" ? it.quantidade - q : q;
+  $("#movPrev").innerHTML = `Agora: <b>${fmtQ(it.quantidade)} ${esc(it.unidade)}</b> → depois: <b>${fmtQ(Math.round(n * 1000) / 1000)} ${esc(it.unidade)}</b>${n < 0 ? " · não pode ficar negativo" : n <= it.minimo ? " · vai ficar abaixo do mínimo" : ""}`;
+}
+async function openMov(it){
+  movItem = it; const f = $("#movForm"); f.reset(); $("#movErr").textContent = ""; $("#movTitle").textContent = it.nome; movPreview();
+  $("#movHist").innerHTML = ""; $("#dlgMov").showModal(); f.qtd.focus();
+  try { const { movimentos } = await call("GET", "/admin/estoque/historico?id=" + it.id);
+    const T = { entrada: "chegou", saida: "usou", contagem: "contagem" };
+    $("#movHist").innerHTML = movimentos.map(m => `<li><span>${dia(m.criado_em)} ${hora(m.criado_em)} · ${T[m.tipo] || m.tipo}${m.motivo ? ` · ${esc(m.motivo)}` : ""}</span><span class="d ${m.delta < 0 ? "neg" : "pos"}">${m.delta > 0 ? "+" : ""}${fmtQ(m.delta)} → ${fmtQ(m.saldo)}</span></li>`).join("");
+  } catch (x) {}
+}
+$("#movForm").addEventListener("input", movPreview);
+$("#movEdit").addEventListener("click", () => { $("#dlgMov").close(); openItem(movItem); });
+$("#movForm").addEventListener("submit", async e => {
+  e.preventDefault(); const f = e.target, q = parseQ(f.qtd.value), err = $("#movErr"); err.textContent = "";
+  if (!(q >= 0) || (f.tipo.value !== "contagem" && q === 0)) { err.textContent = "Digite a quantidade, por exemplo 2,5."; return f.qtd.focus(); }
+  try { const n = await mov(movItem.id, f.tipo.value, q, f.motivo.value.trim()); $("#dlgMov").close(); toast(`${n.nome}: ${fmtQ(n.quantidade)} ${n.unidade}${n.acabando ? " · acabando" : ""}`); }
+  catch (x) { err.textContent = x.message; }
+});
+
+function openShop(){
+  const low = STK.itens.filter(i => i.acabando);
+  const txt = ["*Lista de compras · Balcão*", `_${new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}_`, "",
+    ...low.map(i => `• ${i.nome}: ${fmtQ(sugestao(i))} ${i.unidade}  (tem ${fmtQ(i.quantidade)}, mínimo ${fmtQ(i.minimo)})`)].join("\n");
+  $("#shopTxt").textContent = txt; $("#shopWa").href = "https://wa.me/?text=" + encodeURIComponent(txt); $("#dlgShop").showModal();
+}
+$("#shopCopy").addEventListener("click", async () => { try { await navigator.clipboard.writeText($("#shopTxt").textContent); toast("Lista copiada"); } catch (x) { toast("Não deu para copiar. Selecione o texto e copie."); } });
+
 /* ---------- abas, entrar e sair ---------- */
-function tab(t){ $$(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t)); ["pedidos","selos","clientes"].forEach(x => $("#t-"+x).hidden = x !== t); if (t === "clientes") loadRank(); if (t === "pedidos") loadOrders(true); }
+function tab(t){ $$(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t)); ["pedidos","selos","clientes","estoque"].forEach(x => $("#t-"+x).hidden = x !== t); if (t === "clientes") loadRank(); if (t === "estoque") loadStock(); if (t === "pedidos") loadOrders(true); }
 $$(".tabs button").forEach(b => b.addEventListener("click", () => tab(b.dataset.tab)));
 let timer = null;
 function start(){
   $("#login").hidden = true; $("#app").hidden = false; $("#demoBar").hidden = !DEMO;
-  loadOrders(); clearInterval(timer); timer = setInterval(() => { if (!document.hidden) loadOrders(true); }, DEMO ? 5000 : 20000);
+  loadOrders(); loadStock(true); clearInterval(timer); timer = setInterval(() => { if (!document.hidden) loadOrders(true); }, DEMO ? 5000 : 20000);
 }
 function logout(){ sessionStorage.removeItem("balcao-painel"); localStorage.removeItem("balcao-painel"); clearInterval(timer); $("#app").hidden = true; $("#login").hidden = false; }
 $("#logout").addEventListener("click", () => { if (DEMO) { location.href = location.pathname; return; } logout(); });
@@ -351,7 +528,13 @@ function demo(method, path, body){
     for (let i = 0; i < 4; i++) add("41999910004", 1, "pedido retirado", "OLD1"+i, 60*24*(20-i));
     for (let i = 0; i < 10; i++) add("41999910005", 1, i < 9 ? "pedido retirado" : "pedido retirado", i < 9 ? "OLD2"+i : pedidos[4].id, 60*24*(25-i));
     let extra = 0; setInterval(() => { if (pedidos.length < 14) pedidos.push(mk(["Pedro","Luiza","Bruno","Camila"][extra++ % 4], "4199991100"+(extra%10), [["margherita",1],["calabresa",1]], "novo", 0)); }, 40000);
-    return { pedidos, selos, P, add };
+    const U = ["kg","g","L","ml","un","cx","pct","lata","maço","botijão"], C = ["Massa","Queijos","Recheios","Molhos e temperos","Bebidas","Embalagens","Limpeza","Outros"];
+    let sid = 0; const it = (nome, unidade, quantidade, minimo, categoria) => ({ id: ++sid, nome, unidade, quantidade, minimo, categoria, atualizado_em: ago(60*24*(sid%4)), acabando: quantidade <= minimo });
+    const itens = [it("Farinha tipo 00","kg",18,25,"Massa"), it("Fermento natural (levain)","kg",2.5,1,"Massa"), it("Fior di Latte","kg",3.2,4,"Queijos"), it("Mussarela","kg",9,5,"Queijos"),
+      it("Gorgonzola","kg",1.4,1,"Queijos"), it("Parmesão","kg",2,1,"Queijos"), it("Calabresa defumada","kg",3,2,"Recheios"), it("Pepperoni","kg",0.8,1,"Recheios"), it("Cogumelo Paris","kg",2,1.5,"Recheios"),
+      it("Tomate pelado","lata",14,10,"Molhos e temperos"), it("Manjericão","maço",3,4,"Molhos e temperos"), it("Azeite extravirgem","L",4,2,"Molhos e temperos"), it("Caixa de pizza 30 cm","un",120,100,"Embalagens"), it("Gás","botijão",1,1,"Outros")];
+    const movs = [];
+    return { pedidos, selos, P, add, itens, movs, U, C, nextId: () => ++sid };
   })());
   const sum = tel => D.selos.filter(s => s.tel === tel).reduce((a,s)=>a+s.delta,0);
   const u = new URL("https://x" + path), p = u.pathname;
@@ -369,6 +552,21 @@ function demo(method, path, body){
   if (p === "/admin/resgate") { if (sum(body.tel) < META) return Promise.reject(new Error("cartão ainda não está cheio")); D.add(body.tel, -META, "prêmio resgatado", null, 0); return out({ ok:true, selos:sum(body.tel) }); }
   if (p === "/admin/clientes") { const tels = [...new Set(D.selos.map(s => s.tel))];
     return out({ meta:META, clientes: tels.map(t => ({ tel:t, selos:sum(t), ultimo:D.selos.filter(s=>s.tel===t).map(s=>s.criado_em).sort().pop(), nome:(D.pedidos.find(x=>x.tel===t)||{}).nome||"" })).filter(c=>c.selos>0).sort((a,b)=>b.selos-a.selos) }); }
+  const pub = i => ({ ...i, acabando: i.quantidade <= i.minimo });
+  if (p === "/admin/estoque") return out({ unidades: D.U, categorias: D.C, itens: D.itens.slice().sort((a,b) => a.categoria.localeCompare(b.categoria) || a.nome.localeCompare(b.nome)).map(pub) });
+  if (p === "/admin/estoque/item") { const nome = String(body.nome||"").trim();
+    if (nome.length < 2) return Promise.reject(new Error("Confira: nome do item"));
+    if (body.id) { const i = D.itens.find(x => x.id === body.id); Object.assign(i, { nome, unidade: body.unidade, categoria: body.categoria, minimo: +body.minimo || 0, atualizado_em: new Date().toISOString() }); return out({ ok: true, item: pub(i) }); }
+    if (D.itens.some(x => x.nome.toLowerCase() === nome.toLowerCase())) return Promise.reject(new Error("Já existe um item com esse nome."));
+    const i = { id: D.nextId(), nome, unidade: body.unidade, categoria: body.categoria, minimo: +body.minimo || 0, quantidade: +body.quantidade || 0, atualizado_em: new Date().toISOString() };
+    D.itens.push(i); if (i.quantidade) D.movs.push({ item_id: i.id, delta: i.quantidade, saldo: i.quantidade, tipo: "contagem", motivo: "cadastro", criado_em: i.atualizado_em }); return out({ ok: true, item: pub(i) }); }
+  if (p === "/admin/estoque/mov") { const i = D.itens.find(x => x.id === body.id), q = +body.qtd;
+    const n = Math.round((body.tipo === "entrada" ? i.quantidade + q : body.tipo === "saida" ? i.quantidade - q : q) * 1000) / 1000;
+    if (n < 0) return Promise.reject(new Error(`Só há ${i.quantidade} ${i.unidade} de ${i.nome}.`));
+    D.movs.push({ item_id: i.id, delta: Math.round((n - i.quantidade) * 1000) / 1000, saldo: n, tipo: body.tipo, motivo: body.motivo || "", criado_em: new Date().toISOString() });
+    i.quantidade = n; i.atualizado_em = new Date().toISOString(); return out({ ok: true, item: pub(i) }); }
+  if (p === "/admin/estoque/remover") { D.itens = D.itens.filter(x => x.id !== body.id); return out({ ok: true }); }
+  if (p === "/admin/estoque/historico") { const id = +u.searchParams.get("id"); return out({ movimentos: D.movs.filter(m => m.item_id === id).reverse() }); }
   return Promise.reject(new Error("não encontrado"));
 }
 </script>

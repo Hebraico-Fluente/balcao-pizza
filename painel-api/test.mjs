@@ -50,3 +50,22 @@ j = await (await req("GET", "/admin/clientes", null, K)).json(); ok(Array.isArra
 const cf = (origin, host) => handle(new Request(`https://${host}/pedido`, { method: "POST", headers: { "Content-Type": "application/json", Origin: origin, "CF-Connecting-IP": "7.7.7.7" }, body: JSON.stringify(ped()) }), env);
 ok((await cf("https://balcao-pizza.minhaconta.workers.dev", "painel-balcao.minhaconta.workers.dev")).status === 200, "aceita o site da Balcão na mesma conta Cloudflare");
 ok((await cf("https://balcao-pizza.outraconta.workers.dev", "painel-balcao.minhaconta.workers.dev")).status === 403, "recusa o mesmo nome em outra conta");
+
+/* ---------- estoque ---------- */
+r = await req("GET", "/admin/estoque"); ok(r.status === 401, "estoque exige senha");
+j = await (await req("POST", "/admin/estoque/item", { nome: "Farinha 00", unidade: "kg", minimo: 10, categoria: "Massa", quantidade: 25 }, K)).json();
+ok(j.item && j.item.quantidade === 25 && j.item.acabando === false, "cadastra item com quantidade inicial");
+const farinha = j.item.id;
+r = await req("POST", "/admin/estoque/item", { nome: "farinha 00", unidade: "kg" }, K); ok(r.status === 409, "não deixa cadastrar o mesmo item duas vezes");
+r = await req("POST", "/admin/estoque/item", { nome: "X", unidade: "tonelada" }, K); ok(r.status === 400, "recusa nome curto ou unidade estranha");
+j = await (await req("POST", "/admin/estoque/mov", { id: farinha, tipo: "saida", qtd: "16,5", motivo: "noite de sábado" }, K)).json();
+ok(j.item.quantidade === 8.5 && j.item.acabando === true, "saída com vírgula e aviso de acabando");
+r = await req("POST", "/admin/estoque/mov", { id: farinha, tipo: "saida", qtd: 20 }, K); ok(r.status === 400, "não deixa o estoque ficar negativo");
+j = await (await req("POST", "/admin/estoque/mov", { id: farinha, tipo: "entrada", qtd: 25 }, K)).json(); ok(j.item.quantidade === 33.5 && !j.item.acabando, "entrada de mercadoria");
+j = await (await req("POST", "/admin/estoque/mov", { id: farinha, tipo: "contagem", qtd: 30 }, K)).json(); ok(j.item.quantidade === 30, "contagem acerta o saldo");
+j = await (await req("GET", "/admin/estoque/historico?id=" + farinha, null, K)).json();
+ok(j.movimentos.length === 4 && j.movimentos[0].delta === -3.5 && j.movimentos[0].saldo === 30, "histórico guarda cada movimento");
+j = await (await req("POST", "/admin/estoque/item", { id: farinha, nome: "Farinha tipo 00", unidade: "kg", minimo: 40, categoria: "Massa" }, K)).json();
+ok(j.item.nome === "Farinha tipo 00" && j.item.quantidade === 30 && j.item.acabando, "editar item mantém o saldo");
+await req("POST", "/admin/estoque/remover", { id: farinha }, K);
+j = await (await req("GET", "/admin/estoque", null, K)).json(); ok(j.itens.length === 0 && j.unidades.includes("kg"), "remover tira o item da lista");
