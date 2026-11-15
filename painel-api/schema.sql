@@ -58,3 +58,10 @@ CREATE TABLE IF NOT EXISTS estoque_mov (
   criado_em TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS estoque_mov_item ON estoque_mov (item_id, id);
+
+-- Ajustes que o admin muda pelo painel (ex.: loja fechada hoje / até uma data).
+CREATE TABLE IF NOT EXISTS config (
+  chave         TEXT PRIMARY KEY,
+  valor         TEXT NOT NULL,           -- JSON
+  atualizado_em TEXT
+);

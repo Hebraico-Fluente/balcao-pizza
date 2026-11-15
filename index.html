@@ -50,6 +50,10 @@ button{font:inherit;color:inherit}
 .dot{width:7px;height:7px;border-radius:50%;background:#B9A99B;flex:none}
 .dot.on{background:#5BD08A;box-shadow:0 0 0 3px rgba(91,208,138,.22)}
 @media (max-width:700px){.topline .addr{display:none}}
+.aviso-loja{background:#2B1A12;color:var(--cream);text-align:center;font-size:14.5px;line-height:1.45;padding:12px 20px;text-wrap:balance}
+.aviso-loja b{color:#fff}
+.aviso-loja[hidden]{display:none}
+#send:disabled{opacity:.55;cursor:not-allowed}
 
 /* ---------- header ---------- */
 header{position:sticky;top:0;z-index:var(--z-header);background:rgba(243,237,227,.88);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);box-shadow:0 1px 0 transparent;transition:box-shadow .2s ease}
@@ -366,6 +370,7 @@ footer a{text-decoration:none}
 </head>
 <body>
 
+<div class="aviso-loja" id="avisoLoja" role="status" hidden></div>
 <div class="topline">
   <div class="wrap">
     <span class="status" data-status><span class="dot"></span>Ter a dom · 18h às 23h</span>
@@ -686,6 +691,19 @@ function nextOpen(){ const n=spNow(); for(let i=0;i<8;i++){ const d=(n.dow+i)%7;
   if(!isOpen()) $("[data-closed-note]").textContent = `Estamos fechados agora. Você já pode deixar o pedido para retirar ${dia}.`;
 })();
 
+/* ---------- loja fechada pelo painel (o admin liga e desliga lá, sem mexer no código) ---------- */
+let LOJA_FECHADA = false;
+if(CONFIG.panelApi) fetch(CONFIG.panelApi + "/status").then(r => r.ok ? r.json() : null).then(j => {
+  if(!j || !j.fechado) return;
+  LOJA_FECHADA = true;
+  const ate = j.ate ? (j.ate === new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo"}).format(new Date()) ? "hoje" : "até " + j.ate.split("-").reverse().slice(0,2).join("/")) : "por enquanto";
+  const motivo = j.motivo ? " " + (/[.!?…]$/.test(j.motivo) ? j.motivo : j.motivo + ".") : "";
+  const aviso = $("#avisoLoja"); aviso.innerHTML = `<b>Não estamos recebendo pedidos ${ate}.</b>`; aviso.append(motivo); aviso.hidden = false;
+  $("[data-status]").innerHTML = `<span class="dot"></span>Fechado ${ate}`;
+  $("[data-closed-note]").textContent = `Não estamos recebendo pedidos ${ate}.${motivo}`;
+  const b = $("#send"); b.disabled = true; b.lastChild.textContent = " Pedidos pausados";
+}).catch(() => {});
+
 /* ---------- carrinho ---------- */
 let cart = JSON.parse(sessionStorage.getItem("balcao-cart-v2")||"[]"); // [{id, note, qty}]
 cart = cart.filter(l => byId(l.id));
@@ -851,6 +869,7 @@ let toastT; function toast(msg){ const t=$("#toast"); t.textContent=msg; t.class
 $("#send").onclick = () => {
   const f=$("#form"), {qty:q,sum}=totals(), err=$("#err"), nome=f.nome.value.trim();
   err.textContent="";
+  if(LOJA_FECHADA) return err.textContent="Não estamos recebendo pedidos agora.";
   if(!q) return err.textContent="Adicione pelo menos uma pizza.";
   if(sum<CONFIG.minOrder) return err.textContent="Pedido mínimo de "+brl(CONFIG.minOrder)+".";
   if(!nome){ err.textContent="Digite seu nome."; return f.nome.focus(); }

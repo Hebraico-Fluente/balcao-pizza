@@ -7,6 +7,7 @@
  *   GET  /selos?tel=41999999999  o cliente consulta o próprio cartão: devolve SÓ a quantidade de selos
  *                                (nada de nome ou pedidos), só para o site da Balcão e no máximo
  *                                MAX_CONSULTAS_POR_IP_HORA consultas por aparelho, para ninguém varrer números.
+ *   GET  /status                 a loja está fechada pelo painel? {"fechado", "ate", "motivo"}
  *
  * Painel (exige a senha no cabeçalho  Authorization: Bearer SENHA):
  *   GET  /admin/pedidos?status=abertos|hoje|todos
@@ -15,6 +16,8 @@
  *   POST /admin/selo             {"tel","delta":+1|-1,"motivo"}
  *   POST /admin/resgate          {"tel"}   usa um cartão cheio (desconta a meta)
  *   GET  /admin/clientes         números com selos (ranking)
+ *   GET  /admin/loja                    abrir/fechar a loja pelo painel
+ *   POST /admin/loja                    {"fechado": true|false, "ate"?: "AAAA-MM-DD", "motivo"?}
  *   GET  /admin/estoque                 itens do estoque (com aviso de "acabando")
  *   POST /admin/estoque/item            {"id"?, "nome", "unidade", "minimo", "categoria"}  cria ou edita
  *   POST /admin/estoque/mov             {"id", "tipo": "entrada"|"saida"|"contagem", "qtd", "motivo"?}
@@ -129,6 +132,15 @@ export function montarPedido(b) {
 }
 
 
+/* ---------- loja aberta/fechada pelo painel ---------- */
+export const hojeSP = (d = new Date()) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(d); // AAAA-MM-DD
+async function lerLoja(env) {
+  const r = await env.DB.prepare("SELECT valor FROM config WHERE chave = 'loja'").first();
+  let v = {}; try { v = r ? JSON.parse(r.valor) : {}; } catch (e) {}
+  const fechado = !!v.fechado && (!v.ate || hojeSP() <= v.ate);   // "até" vence sozinho: no dia seguinte a loja reabre
+  return { fechado, ate: fechado ? v.ate || null : null, motivo: fechado ? String(v.motivo || "") : "" };
+}
+
 /* ---------- estoque ---------- */
 const num = v => { const n = Number(String(v ?? "").replace(",", ".")); return Number.isFinite(n) ? Math.round(n * 1000) / 1000 : NaN; };
 export function validarItem(b) {
@@ -153,6 +165,8 @@ export async function handle(req, env) {
   if (req.method === "POST" && path === "/pedido") {
     if (!origens(req).includes(req.headers.get("Origin") || "")) return json(req, { error: "origem" }, 403);
     let p; try { p = montarPedido(await req.json()); } catch (e) { return json(req, { error: e.message }, 400); }
+    const loja = await lerLoja(env);
+    if (loja.fechado) return json(req, { error: "loja fechada", ...loja }, 423);
     const ip = await hashIp(req);
     const n = await env.DB.prepare("SELECT COUNT(*) AS n FROM pedidos WHERE ip = ? AND criado_em > ?")
       .bind(ip, new Date(Date.now() - 3600e3).toISOString()).first();
@@ -173,6 +187,10 @@ export async function handle(req, env) {
     await env.DB.prepare("DELETE FROM consultas WHERE criado_em < ?").bind(new Date(Date.now() - 86400e3).toISOString()).run();
     const total = await selosDe(env, tel);
     return json(req, { selos: Math.min(total, META_SELOS), meta: META_SELOS, completo: total >= META_SELOS });
+  }
+  if (req.method === "GET" && path === "/status") {
+    if (!origens(req).includes(req.headers.get("Origin") || "")) return json(req, { error: "origem" }, 403);
+    return json(req, await lerLoja(env));
   }
   if (req.method === "GET" && path === "/") return json(req, { ok: true, api: "painel-balcao" });
 
@@ -245,6 +263,20 @@ export async function handle(req, env) {
         (SELECT nome FROM pedidos p WHERE p.tel = s.tel ORDER BY criado_em DESC LIMIT 1) AS nome
       FROM selos s GROUP BY s.tel HAVING SUM(s.delta) > 0 ORDER BY selos DESC, ultimo DESC LIMIT 200`).all();
     return json(req, { meta: META_SELOS, clientes: results });
+  }
+
+  if (req.method === "GET" && path === "/admin/loja") return json(req, { ...(await lerLoja(env)), hoje: hojeSP() });
+  if (req.method === "POST" && path === "/admin/loja") {
+    const b = await req.json().catch(() => ({}));
+    let v = { fechado: false };
+    if (b.fechado) {
+      const ate = b.ate ? String(b.ate) : null;
+      if (ate && (!/^\d{4}-\d{2}-\d{2}$/.test(ate) || ate < hojeSP())) return json(req, { error: "Escolha uma data de hoje em diante." }, 400);
+      v = { fechado: true, ate, motivo: String(b.motivo || "").trim().replace(/\s+/g, " ").slice(0, 140) };
+    }
+    await env.DB.prepare("INSERT INTO config (chave, valor, atualizado_em) VALUES ('loja', ?, ?) ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor, atualizado_em = excluded.atualizado_em")
+      .bind(JSON.stringify(v), agora()).run();
+    return json(req, { ok: true, ...(await lerLoja(env)), hoje: hojeSP() });
   }
 
   if (req.method === "GET" && path === "/admin/estoque") {

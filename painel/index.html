@@ -52,6 +52,19 @@ header{position:sticky;top:0;z-index:10;background:var(--wine);color:#fff}
 .live{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12.5px;opacity:.9}
 .live i{width:8px;height:8px;border-radius:50%;background:#7BD99A;box-shadow:0 0 0 3px rgba(123,217,154,.25)}
 .live.off i{background:#F0A08A;box-shadow:0 0 0 3px rgba(240,160,138,.25)}
+.loja{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 12px;border:0;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;font:600 13px/1 var(--sans);cursor:pointer;white-space:nowrap}
+.loja i{width:8px;height:8px;border-radius:50%;background:#7BD99A}
+.loja.off{background:#fff;color:var(--red)}
+.loja.off i{background:var(--red)}
+.live{margin-left:auto}
+.loja .sm{display:none}
+@media(max-width:600px){.live #liveTxt{display:none}.top small{display:none}.loja .lg{display:none}.loja .sm{display:inline}}
+.dlg .opts{display:grid;gap:6px}
+.dlg .opt{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--line);color:var(--ink);font-size:15px;font-weight:500;cursor:pointer}
+.dlg .opt:has(input:checked){box-shadow:inset 0 0 0 2px var(--wine)}
+.dlg .opt input{accent-color:var(--wine);width:18px;height:18px}
+.dlg .opt input[type=date]{width:auto;height:36px;margin-left:auto;accent-color:auto}
+.lojaprev{margin:0;padding:12px 14px;border-radius:10px;background:#2B1A12;color:#F6EFE6;font-size:14px;line-height:1.45;text-align:center}
 .top .out{background:rgba(255,255,255,.14);color:#fff;min-height:36px}
 .tabs{display:flex;gap:4px;padding:0 10px;overflow-x:auto}
 .tabs button{position:relative;min-height:46px;padding:0 14px;border:0;background:none;color:rgba(255,255,255,.75);font-weight:600;cursor:pointer;white-space:nowrap}
@@ -184,7 +197,7 @@ dialog.dlg::backdrop{background:rgba(30,22,17,.45)}
 
 <div id="app" hidden>
   <header>
-    <div class="top"><b>Balcão</b><small>Painel</small><span class="live" id="live"><i></i><span id="liveTxt">ao vivo</span></span><button class="btn b-sm out" type="button" id="logout">Sair</button></div>
+    <div class="top"><b>Balcão</b><small>Painel</small><span class="live" id="live"><i></i><span id="liveTxt">ao vivo</span></span><button class="loja" type="button" id="lojaBtn" hidden><i></i><span id="lojaTxt">Loja aberta</span></button><button class="btn b-sm out" type="button" id="logout">Sair</button></div>
     <nav class="tabs" role="tablist">
       <button type="button" role="tab" data-tab="pedidos" aria-selected="true">Pedidos<span class="n" id="nOpen" hidden>0</span></button>
       <button type="button" role="tab" data-tab="selos" aria-selected="false">Selos</button>
@@ -223,6 +236,22 @@ dialog.dlg::backdrop{background:rgba(30,22,17,.45)}
     </section>
   </main>
 </div>
+<dialog class="dlg" id="dlgLoja"><form method="dialog" id="lojaForm" novalidate>
+  <h3 id="lojaTitle">Fechar a loja</h3>
+  <div id="lojaFechar">
+    <div class="opts" role="radiogroup" aria-label="Por quanto tempo">
+      <label class="opt"><input type="radio" name="quando" value="hoje" checked>Só hoje</label>
+      <label class="opt"><input type="radio" name="quando" value="data">Até o dia<input type="date" name="ate" aria-label="Último dia fechado"></label>
+      <label class="opt"><input type="radio" name="quando" value="sem">Até eu reabrir</label>
+    </div>
+    <label style="margin-top:12px">Aviso para os clientes (opcional)<input class="in" name="motivo" maxlength="140" placeholder="Ex.: Manutenção no forno. Voltamos amanhã!"></label>
+    <p class="preview" style="margin:12px 0 6px">Assim aparece no topo do site:</p>
+    <p class="lojaprev" id="lojaPrev"></p>
+  </div>
+  <p class="preview" id="lojaEstado" hidden></p>
+  <p class="err" id="lojaErr" role="alert"></p>
+  <div class="acts"><button class="btn b-line" type="button" data-close>Cancelar</button><button class="btn b-wine" type="submit" id="lojaOk">Fechar a loja</button></div>
+</form></dialog>
 <dialog class="dlg" id="dlgItem"><form method="dialog" id="itemForm" novalidate>
   <h3 id="itemTitle">Novo item</h3>
   <label>Nome<input class="in" name="nome" maxlength="50" placeholder="Ex.: Farinha tipo 00" required></label>
@@ -385,6 +414,41 @@ async function loadRank(){
 }
 $("#rank").addEventListener("click", e => { const b = e.target.closest("[data-tel]"); if (b) { tab("selos"); openClient(b.dataset.tel); } });
 
+/* ---------- loja aberta / fechada ---------- */
+let LOJA = { fechado: false };
+const hojeSP = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+const dataBR = d => d.split("-").reverse().slice(0, 2).join("/");
+const quandoTxt = (ate, hoje) => !ate ? "por enquanto" : ate === hoje ? "hoje" : "até " + dataBR(ate);
+function renderLoja(){
+  $("#lojaBtn").hidden = false; $("#lojaBtn").classList.toggle("off", LOJA.fechado);
+  $("#lojaTxt").innerHTML = LOJA.fechado ? `<span class="lg">Loja fechada ${quandoTxt(LOJA.ate, LOJA.hoje || hojeSP())}</span><span class="sm">Fechada</span>` : `<span class="lg">Loja aberta</span><span class="sm">Aberta</span>`;
+  $("#lojaBtn").setAttribute("aria-label", (LOJA.fechado ? "Loja fechada. Reabrir" : "Loja aberta. Fechar") + " a loja");
+}
+async function loadLoja(){ try { LOJA = await call("GET", "/admin/loja"); renderLoja(); } catch (e) {} }
+function lojaAte(){ const f = $("#lojaForm"), q = f.quando.value; return q === "hoje" ? hojeSP() : q === "data" ? f.ate.value : null; }
+function lojaPreview(){
+  const f = $("#lojaForm"), m = f.motivo.value.trim(), ate = lojaAte();
+  $("#lojaPrev").innerHTML = `<b>Não estamos recebendo pedidos ${quandoTxt(ate, hojeSP())}.</b> ${esc(m ? (/[.!?…]$/.test(m) ? m : m + ".") : "")}`;
+}
+$("#lojaBtn").addEventListener("click", () => {
+  const f = $("#lojaForm"); f.reset(); $("#lojaErr").textContent = ""; f.ate.min = hojeSP(); f.ate.value = hojeSP();
+  $("#lojaFechar").hidden = LOJA.fechado; $("#lojaEstado").hidden = !LOJA.fechado;
+  $("#lojaTitle").textContent = LOJA.fechado ? "A loja está fechada" : "Fechar a loja";
+  $("#lojaOk").textContent = LOJA.fechado ? "Reabrir agora" : "Fechar a loja";
+  $("#lojaOk").className = "btn " + (LOJA.fechado ? "b-green" : "b-wine");
+  if (LOJA.fechado) $("#lojaEstado").innerHTML = `O site mostra que não está recebendo pedidos <b>${quandoTxt(LOJA.ate, LOJA.hoje || hojeSP())}</b>${LOJA.motivo ? ` com o aviso: “${esc(LOJA.motivo)}”` : ""}.${LOJA.ate ? " Reabre sozinha no dia seguinte." : ""}`;
+  lojaPreview(); $("#dlgLoja").showModal();
+});
+$("#lojaForm").addEventListener("input", e => { if (e.target.name === "ate") e.target.form.quando.value = "data"; lojaPreview(); });
+$("#lojaForm").addEventListener("submit", async e => {
+  e.preventDefault(); const f = e.target, err = $("#lojaErr"); err.textContent = "";
+  const body = LOJA.fechado ? { fechado: false } : { fechado: true, ate: lojaAte(), motivo: f.motivo.value };
+  if (body.fechado && f.quando.value === "data" && !body.ate) { err.textContent = "Escolha o último dia fechado."; return; }
+  try { LOJA = await call("POST", "/admin/loja", body); renderLoja(); $("#dlgLoja").close();
+    toast(LOJA.fechado ? "Loja fechada · o site já mostra o aviso" : "Loja aberta · pedidos liberados no site"); }
+  catch (x) { err.textContent = x.message; }
+});
+
 /* ---------- estoque ---------- */
 let STK = { itens: [], unidades: [], categorias: [] }, stkFiltro = "todos", movItem = null;
 const fmtQ = n => Number(n).toLocaleString("pt-BR", { maximumFractionDigits: 3 });
@@ -488,7 +552,7 @@ $$(".tabs button").forEach(b => b.addEventListener("click", () => tab(b.dataset.
 let timer = null;
 function start(){
   $("#login").hidden = true; $("#app").hidden = false; $("#demoBar").hidden = !DEMO;
-  loadOrders(); loadStock(true); clearInterval(timer); timer = setInterval(() => { if (!document.hidden) loadOrders(true); }, DEMO ? 5000 : 20000);
+  loadOrders(); loadStock(true); loadLoja(); clearInterval(timer); timer = setInterval(() => { if (!document.hidden) loadOrders(true); }, DEMO ? 5000 : 20000);
 }
 function logout(){ sessionStorage.removeItem("balcao-painel"); localStorage.removeItem("balcao-painel"); clearInterval(timer); $("#app").hidden = true; $("#login").hidden = false; }
 $("#logout").addEventListener("click", () => { if (DEMO) { location.href = location.pathname; return; } logout(); });
@@ -534,7 +598,7 @@ function demo(method, path, body){
       it("Gorgonzola","kg",1.4,1,"Queijos"), it("Parmesão","kg",2,1,"Queijos"), it("Calabresa defumada","kg",3,2,"Recheios"), it("Pepperoni","kg",0.8,1,"Recheios"), it("Cogumelo Paris","kg",2,1.5,"Recheios"),
       it("Tomate pelado","lata",14,10,"Molhos e temperos"), it("Manjericão","maço",3,4,"Molhos e temperos"), it("Azeite extravirgem","L",4,2,"Molhos e temperos"), it("Caixa de pizza 30 cm","un",120,100,"Embalagens"), it("Gás","botijão",1,1,"Outros")];
     const movs = [];
-    return { pedidos, selos, P, add, itens, movs, U, C, nextId: () => ++sid };
+    return { pedidos, selos, P, add, itens, movs, U, C, nextId: () => ++sid, loja: { fechado: false, ate: null, motivo: "" } };
   })());
   const sum = tel => D.selos.filter(s => s.tel === tel).reduce((a,s)=>a+s.delta,0);
   const u = new URL("https://x" + path), p = u.pathname;
@@ -552,6 +616,11 @@ function demo(method, path, body){
   if (p === "/admin/resgate") { if (sum(body.tel) < META) return Promise.reject(new Error("cartão ainda não está cheio")); D.add(body.tel, -META, "prêmio resgatado", null, 0); return out({ ok:true, selos:sum(body.tel) }); }
   if (p === "/admin/clientes") { const tels = [...new Set(D.selos.map(s => s.tel))];
     return out({ meta:META, clientes: tels.map(t => ({ tel:t, selos:sum(t), ultimo:D.selos.filter(s=>s.tel===t).map(s=>s.criado_em).sort().pop(), nome:(D.pedidos.find(x=>x.tel===t)||{}).nome||"" })).filter(c=>c.selos>0).sort((a,b)=>b.selos-a.selos) }); }
+  if (p === "/admin/loja") {
+    if (method === "POST") { if (body.fechado && body.ate && body.ate < hojeSP()) return Promise.reject(new Error("Escolha uma data de hoje em diante."));
+      D.loja = body.fechado ? { fechado: true, ate: body.ate || null, motivo: String(body.motivo || "").trim().slice(0, 140) } : { fechado: false, ate: null, motivo: "" }; }
+    return out({ ...D.loja, hoje: hojeSP() });
+  }
   const pub = i => ({ ...i, acabando: i.quantidade <= i.minimo });
   if (p === "/admin/estoque") return out({ unidades: D.U, categorias: D.C, itens: D.itens.slice().sort((a,b) => a.categoria.localeCompare(b.categoria) || a.nome.localeCompare(b.nome)).map(pub) });
   if (p === "/admin/estoque/item") { const nome = String(body.nome||"").trim();

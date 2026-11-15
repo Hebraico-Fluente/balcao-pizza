@@ -1,7 +1,7 @@
 // Teste local do painel (D1 simulado). Uso: node painel-api/test.mjs
 import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
-import { handle, normTel } from "./worker.js";
+import { handle, normTel, hojeSP } from "./worker.js";
 
 const db = new DatabaseSync(":memory:");
 db.exec(fs.readFileSync(new URL("./schema.sql", import.meta.url), "utf8"));
@@ -69,3 +69,19 @@ j = await (await req("POST", "/admin/estoque/item", { id: farinha, nome: "Farinh
 ok(j.item.nome === "Farinha tipo 00" && j.item.quantidade === 30 && j.item.acabando, "editar item mantém o saldo");
 await req("POST", "/admin/estoque/remover", { id: farinha }, K);
 j = await (await req("GET", "/admin/estoque", null, K)).json(); ok(j.itens.length === 0 && j.unidades.includes("kg"), "remover tira o item da lista");
+
+/* ---------- loja fechada pelo painel ---------- */
+j = await (await req("GET", "/status")).json(); ok(j.fechado === false, "loja começa aberta");
+r = await req("POST", "/admin/loja", { fechado: true }); ok(r.status === 401, "fechar a loja exige senha");
+r = await req("POST", "/admin/loja", { fechado: true, ate: "2020-01-01" }, K); ok(r.status === 400, "não aceita data no passado");
+j = await (await req("POST", "/admin/loja", { fechado: true, ate: hojeSP(), motivo: "  Manutenção do forno  " }, K)).json();
+ok(j.fechado && j.ate === hojeSP() && j.motivo === "Manutenção do forno", "admin fecha a loja só hoje com aviso");
+j = await (await req("GET", "/status", null, { ip: "6.6.6.6" })).json(); ok(j.fechado && j.motivo === "Manutenção do forno", "site vê a loja fechada e o aviso");
+r = await req("GET", "/status", null, { origin: "https://outro.com" }); ok(r.status === 403, "status só para o site da Balcão");
+r = await req("POST", "/pedido", ped(), { ip: "8.8.8.8" }); ok(r.status === 423, "com a loja fechada o pedido não entra");
+db.prepare("UPDATE config SET valor = ? WHERE chave = 'loja'").run(JSON.stringify({ fechado: true, ate: "2020-01-01", motivo: "x" }));
+j = await (await req("GET", "/status")).json(); ok(j.fechado === false, "depois da data escolhida a loja reabre sozinha");
+await req("POST", "/admin/loja", { fechado: true, motivo: "Férias" }, K);
+j = await (await req("GET", "/admin/loja", null, K)).json(); ok(j.fechado && j.ate === null, "fechar até reabrir (sem data)");
+j = await (await req("POST", "/admin/loja", { fechado: false }, K)).json(); ok(!j.fechado, "reabrir pelo painel");
+r = await req("POST", "/pedido", ped(), { ip: "8.8.8.8" }); ok(r.status === 200, "reaberta, o pedido volta a entrar");
