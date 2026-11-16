@@ -85,3 +85,28 @@ await req("POST", "/admin/loja", { fechado: true, motivo: "Férias" }, K);
 j = await (await req("GET", "/admin/loja", null, K)).json(); ok(j.fechado && j.ate === null, "fechar até reabrir (sem data)");
 j = await (await req("POST", "/admin/loja", { fechado: false }, K)).json(); ok(!j.fechado, "reabrir pelo painel");
 r = await req("POST", "/pedido", ped(), { ip: "8.8.8.8" }); ok(r.status === 200, "reaberta, o pedido volta a entrar");
+
+/* ---------- baixa automática por pizza ---------- */
+const novo = async (nome, unidade, quantidade, minimo) => (await (await req("POST", "/admin/estoque/item", { nome, unidade, quantidade, minimo, categoria: "Outros" }, K)).json()).item.id;
+const fior = await novo("Fior di Latte", "kg", 5, 1), caixa = await novo("Caixa 30 cm", "un", 10, 3), manj = await novo("Manjericão", "maço", 0.15, 0.5);
+r = await req("POST", "/admin/ficha", { sabor: "margherita", linhas: [{ item_id: fior, qtd: "0,12" }, { item_id: manj, qtd: 0.1 }] }, K); ok(r.status === 200, "salva a ficha da margherita");
+await req("POST", "/admin/ficha", { sabor: "_todas", linhas: [{ item_id: caixa, qtd: 1 }] }, K);
+r = await req("POST", "/admin/ficha", { sabor: "pizza-de-mentira", linhas: [] }, K); ok(r.status === 400, "recusa sabor que não existe");
+r = await req("POST", "/admin/ficha", { sabor: "margherita", linhas: [{ item_id: fior, qtd: 0 }] }, K); ok(r.status === 400, "recusa quantidade zero na ficha");
+j = await (await req("GET", "/admin/fichas", null, K)).json();
+ok(j.sabores[0].id === "_todas" && j.fichas.margherita.length === 2 && j.fichas._todas[0].nome === "Caixa 30 cm", "lista as fichas por sabor");
+const est = async id => (await (await req("GET", "/admin/estoque", null, K)).json()).itens.find(i => i.id === id);
+const pz = ped({ itens: [{ id: "margherita", qtd: 2 }, { id: "diavola", qtd: 1 }] }); await req("POST", "/pedido", pz, { ip: "4.4.4.4" });
+await req("POST", "/admin/pedido/status", { id: pz.id, status: "preparo" }, K);
+ok((await est(fior)).quantidade === 5, "em preparo ainda não baixa o estoque");
+j = await (await req("POST", "/admin/pedido/status", { id: pz.id, status: "retirado" }, K)).json();
+ok((await est(fior)).quantidade === 4.76 && (await est(caixa)).quantidade === 7, "retirado: baixa a ficha de cada pizza + a caixa de todas");
+ok((await est(manj)).quantidade === 0 && j.estoque.some(x => x.nome === "Manjericão" && x.acabando), "não deixa negativo e avisa o que acabou");
+await req("POST", "/admin/pedido/status", { id: pz.id, status: "retirado" }, K);
+ok((await est(caixa)).quantidade === 7, "marcar retirado de novo não baixa duas vezes");
+j = await (await req("POST", "/admin/pedido/status", { id: pz.id, status: "cancelado" }, K)).json();
+ok(j.estoque === "devolvido" && (await est(fior)).quantidade === 5 && (await est(caixa)).quantidade === 10 && (await est(manj)).quantidade === 0.15, "cancelar depois de retirado devolve exatamente o que saiu");
+await req("POST", "/admin/pedido/status", { id: pz.id, status: "retirado" }, K);
+ok((await est(caixa)).quantidade === 7, "retirar de novo volta a baixar");
+j = await (await req("GET", "/admin/estoque/historico?id=" + caixa, null, K)).json();
+ok(j.movimentos.map(m => m.tipo).join() === "pedido,estorno,pedido,contagem", "histórico mostra baixa e estorno do pedido");

@@ -65,3 +65,18 @@ CREATE TABLE IF NOT EXISTS config (
   valor         TEXT NOT NULL,           -- JSON
   atualizado_em TEXT
 );
+
+-- Ficha técnica: quanto de cada item do estoque vai em UMA pizza de cada sabor
+-- (sabor "_todas" = vale para qualquer pizza: caixa, massa...).
+CREATE TABLE IF NOT EXISTS ficha (
+  sabor   TEXT NOT NULL,
+  item_id INTEGER NOT NULL,
+  qtd     REAL NOT NULL,
+  PRIMARY KEY (sabor, item_id)
+);
+
+-- Pedidos que já deram baixa no estoque (no máximo 1 baixa por pedido).
+CREATE TABLE IF NOT EXISTS baixas (
+  pedido_id TEXT PRIMARY KEY,
+  criado_em TEXT NOT NULL
+);

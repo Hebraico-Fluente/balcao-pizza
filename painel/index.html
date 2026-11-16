@@ -149,6 +149,27 @@ dialog.dlg::backdrop{background:rgba(30,22,17,.45)}
 .preview b{color:var(--ink)}
 .shop{white-space:pre-wrap;margin:0;padding:12px 14px;border-radius:10px;background:var(--white);box-shadow:inset 0 0 0 1px var(--line);font:400 14px/1.55 var(--sans);max-height:260px;overflow:auto}
 
+/* fichas */
+.views{display:flex;margin-bottom:16px}
+.fx-intro{margin:0 0 16px;color:var(--muted);font-size:14.5px;line-height:1.5;text-wrap:pretty}
+.fx{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.fx>*{min-width:0}
+.fc{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:12px;background:var(--card);box-shadow:0 0 0 1px var(--line)}
+.fc.all{box-shadow:0 0 0 1.5px var(--wine)}
+.fc h4{margin:0;font:400 22px/1.15 var(--serif)}
+.fc small{color:var(--muted);font-size:12.5px}
+.fc ul{margin:0;padding:0;list-style:none;display:grid;gap:4px;font-size:14px}
+.fc li{display:flex;justify-content:space-between;gap:10px}
+.fc li span:last-child{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.fc .none{color:var(--muted);font-size:13.5px;font-style:italic}
+.fc .btn{margin-top:auto;align-self:flex-start}
+.frows{display:grid;gap:8px}
+.frow{display:grid;grid-template-columns:minmax(0,1fr) 92px auto 40px;gap:6px;align-items:center}
+.frow select.in,.frow input.in{height:44px;min-width:0}
+.frow .u{font-size:13px;color:var(--muted);min-width:34px}
+@media(max-width:600px){.frow{grid-template-columns:minmax(0,1fr) auto 40px;padding-bottom:8px;border-bottom:1px solid var(--line)}.frow select.in{grid-column:1/-1}}
+.frow .x{width:40px;height:40px;border:0;border-radius:8px;background:var(--bg-2);color:var(--muted);font-size:18px;cursor:pointer}
+
 /* selos */
 .wrap2{max-width:760px;margin:0 auto}
 .search{display:flex;gap:8px;margin-bottom:18px}
@@ -225,6 +246,12 @@ dialog.dlg::backdrop{background:rgba(30,22,17,.45)}
     </section>
     <section id="t-estoque" hidden>
       <div class="wrap3">
+        <div class="views"><div class="seg" role="group" aria-label="Ver"><button type="button" data-sv="itens" aria-pressed="true">Itens</button><button type="button" data-sv="fichas" aria-pressed="false">Ficha de cada pizza</button></div></div>
+        <div id="fichasView" hidden>
+          <p class="fx-intro">Quando você marca um pedido como <b>Retirado</b>, o painel tira do estoque o que está na ficha de cada pizza do pedido, mais o que está em <b>Em toda pizza</b> (caixa, massa…). Se desfizer ou cancelar, devolve.</p>
+          <div class="fx" id="fichasList"></div>
+        </div>
+        <div id="itensView">
         <div class="stk-bar">
           <input class="in" id="stkQ" type="search" placeholder="Buscar item…" aria-label="Buscar item do estoque">
           <div class="seg" role="group" aria-label="Filtro do estoque"><button type="button" data-sf="todos" aria-pressed="true">Todos</button><button type="button" data-sf="baixo" aria-pressed="false">Acabando</button></div>
@@ -232,6 +259,7 @@ dialog.dlg::backdrop{background:rgba(30,22,17,.45)}
         </div>
         <div id="stkAlert"></div>
         <div id="stkList"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -251,6 +279,14 @@ dialog.dlg::backdrop{background:rgba(30,22,17,.45)}
   <p class="preview" id="lojaEstado" hidden></p>
   <p class="err" id="lojaErr" role="alert"></p>
   <div class="acts"><button class="btn b-line" type="button" data-close>Cancelar</button><button class="btn b-wine" type="submit" id="lojaOk">Fechar a loja</button></div>
+</form></dialog>
+<dialog class="dlg" id="dlgFicha"><form method="dialog" id="fichaForm" novalidate>
+  <h3 id="fichaTitle">Ficha</h3>
+  <p class="preview" id="fichaSub">Quanto sai do estoque em UMA pizza. Use a unidade do item: 120 g de um item em kg = 0,12.</p>
+  <div class="frows" id="frows"></div>
+  <button class="btn b-line b-sm" type="button" id="fAdd" style="justify-self:start">+ Ingrediente</button>
+  <p class="err" id="fichaErr" role="alert"></p>
+  <div class="acts"><button class="btn b-line" type="button" data-close>Cancelar</button><button class="btn b-wine" type="submit">Salvar ficha</button></div>
 </form></dialog>
 <dialog class="dlg" id="dlgItem"><form method="dialog" id="itemForm" novalidate>
   <h3 id="itemTitle">Novo item</h3>
@@ -361,11 +397,13 @@ $("#orders").addEventListener("click", async e => {
   b.disabled = true;
   try {
     const r = await call("POST", "/admin/pedido/status", { id, status: st });
-    toast(r.selo === "+1" ? `Retirado · selo marcado (${r.selos % META || (r.selos ? META : 0)}/${META})` : r.selo === "removido" ? "Desfeito · selo do pedido removido" : STATUS_TXT[st]);
+    const est = Array.isArray(r.estoque) && r.estoque.length ? " · estoque baixado" + (r.estoque.some(x => x.acabando) ? ` (acabando: ${r.estoque.filter(x => x.acabando).map(x => x.nome).join(", ")})` : "") : r.estoque === "devolvido" ? " · estoque devolvido" : "";
+    toast((r.selo === "+1" ? `Retirado · selo marcado (${r.selos % META || (r.selos ? META : 0)}/${META})` : r.selo === "removido" ? "Desfeito · selo do pedido removido" : STATUS_TXT[st]) + est);
+    if (r.estoque) loadStock(true);
     await loadOrders(true);
   } catch (err) { toast(err.message); b.disabled = false; }
 });
-$$(".seg button").forEach(b => b.addEventListener("click", () => { filtro = b.dataset.f; $$(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b)); loadOrders(); }));
+$$(".seg [data-f]").forEach(b => b.addEventListener("click", () => { filtro = b.dataset.f; $$(".seg [data-f]").forEach(x => x.setAttribute("aria-pressed", x === b)); loadOrders(); }));
 
 /* aviso sonoro de pedido novo (só toca depois do primeiro toque na tela, regra do navegador) */
 let ac = null; addEventListener("pointerdown", () => { if (!ac) try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }, { once: true });
@@ -525,7 +563,7 @@ async function openMov(it){
   movItem = it; const f = $("#movForm"); f.reset(); $("#movErr").textContent = ""; $("#movTitle").textContent = it.nome; movPreview();
   $("#movHist").innerHTML = ""; $("#dlgMov").showModal(); f.qtd.focus();
   try { const { movimentos } = await call("GET", "/admin/estoque/historico?id=" + it.id);
-    const T = { entrada: "chegou", saida: "usou", contagem: "contagem" };
+    const T = { entrada: "chegou", saida: "usou", contagem: "contagem", pedido: "baixa", estorno: "devolvido" };
     $("#movHist").innerHTML = movimentos.map(m => `<li><span>${dia(m.criado_em)} ${hora(m.criado_em)} · ${T[m.tipo] || m.tipo}${m.motivo ? ` · ${esc(m.motivo)}` : ""}</span><span class="d ${m.delta < 0 ? "neg" : "pos"}">${m.delta > 0 ? "+" : ""}${fmtQ(m.delta)} → ${fmtQ(m.saldo)}</span></li>`).join("");
   } catch (x) {}
 }
@@ -535,6 +573,47 @@ $("#movForm").addEventListener("submit", async e => {
   e.preventDefault(); const f = e.target, q = parseQ(f.qtd.value), err = $("#movErr"); err.textContent = "";
   if (!(q >= 0) || (f.tipo.value !== "contagem" && q === 0)) { err.textContent = "Digite a quantidade, por exemplo 2,5."; return f.qtd.focus(); }
   try { const n = await mov(movItem.id, f.tipo.value, q, f.motivo.value.trim()); $("#dlgMov").close(); toast(`${n.nome}: ${fmtQ(n.quantidade)} ${n.unidade}${n.acabando ? " · acabando" : ""}`); }
+  catch (x) { err.textContent = x.message; }
+});
+
+/* ---------- ficha de cada pizza (baixa automática) ---------- */
+let FX = { sabores: [], fichas: {} }, fxSabor = null;
+$$("[data-sv]").forEach(b => b.addEventListener("click", () => {
+  $$("[data-sv]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  const f = b.dataset.sv === "fichas"; $("#fichasView").hidden = !f; $("#itensView").hidden = f; if (f) loadFichas();
+}));
+async function loadFichas(){
+  try { FX = await call("GET", "/admin/fichas"); } catch (e) { return toast(e.message); }
+  $("#fichasList").innerHTML = FX.sabores.map(sb => { const l = FX.fichas[sb.id] || [];
+    return `<div class="fc ${sb.id === "_todas" ? "all" : ""}"><div><h4>${esc(sb.nome)}</h4>${sb.id === "_todas" ? "<small>Sai junto com qualquer pizza</small>" : ""}</div>
+      ${l.length ? `<ul>${l.map(x => `<li><span>${esc(x.nome)}</span><span>${fmtQ(x.qtd)} ${esc(x.unidade)}</span></li>`).join("")}</ul>` : `<p class="none">Sem ficha: essa pizza não dá baixa.</p>`}
+      <button class="btn b-line b-sm" type="button" data-fx="${sb.id}">${l.length ? "Editar" : "Montar ficha"}</button></div>`; }).join("");
+}
+function fRow(item_id, qtd){
+  const d = document.createElement("div"); d.className = "frow";
+  d.innerHTML = `<select class="in" aria-label="Ingrediente">${STK.itens.map(i => `<option value="${i.id}" ${i.id === item_id ? "selected" : ""}>${esc(i.nome)}</option>`).join("")}</select>
+    <input class="in" inputmode="decimal" aria-label="Quantidade por pizza" placeholder="0,1" value="${qtd != null ? fmtQ(qtd) : ""}"><span class="u"></span><button class="x" type="button" aria-label="Tirar ingrediente">×</button>`;
+  const u = () => d.querySelector(".u").textContent = (STK.itens.find(i => i.id === +d.querySelector("select").value) || {}).unidade || "";
+  d.querySelector("select").addEventListener("change", u); u(); return d;
+}
+$("#fichasList").addEventListener("click", async e => {
+  const b = e.target.closest("[data-fx]"); if (!b) return;
+  if (!STK.itens.length) await loadStock(true);
+  if (!STK.itens.length) return toast("Cadastre os itens do estoque primeiro.");
+  fxSabor = b.dataset.fx; const sb = FX.sabores.find(x => x.id === fxSabor);
+  $("#fichaTitle").textContent = sb.id === "_todas" ? "Em toda pizza" : sb.nome; $("#fichaErr").textContent = "";
+  const rows = $("#frows"); rows.innerHTML = "";
+  (FX.fichas[fxSabor] || []).forEach(x => rows.append(fRow(x.item_id, x.qtd)));
+  if (!rows.children.length) rows.append(fRow());
+  $("#dlgFicha").showModal();
+});
+$("#fAdd").addEventListener("click", () => { const r = fRow(); $("#frows").append(r); r.querySelector("input").focus(); });
+$("#frows").addEventListener("click", e => { if (e.target.closest(".x")) e.target.closest(".frow").remove(); });
+$("#fichaForm").addEventListener("submit", async e => {
+  e.preventDefault(); const err = $("#fichaErr"); err.textContent = "";
+  const linhas = $$("#frows .frow").map(r => ({ item_id: +r.querySelector("select").value, qtd: parseQ(r.querySelector("input").value), el: r.querySelector("input") }));
+  const ruim = linhas.find(l => !(l.qtd > 0)); if (ruim) { err.textContent = "Digite quanto vai em uma pizza, por exemplo 0,12."; return ruim.el.focus(); }
+  try { await call("POST", "/admin/ficha", { sabor: fxSabor, linhas: linhas.map(({ item_id, qtd }) => ({ item_id, qtd })) }); $("#dlgFicha").close(); toast("Ficha salva"); loadFichas(); }
   catch (x) { err.textContent = x.message; }
 });
 
@@ -598,7 +677,10 @@ function demo(method, path, body){
       it("Gorgonzola","kg",1.4,1,"Queijos"), it("Parmesão","kg",2,1,"Queijos"), it("Calabresa defumada","kg",3,2,"Recheios"), it("Pepperoni","kg",0.8,1,"Recheios"), it("Cogumelo Paris","kg",2,1.5,"Recheios"),
       it("Tomate pelado","lata",14,10,"Molhos e temperos"), it("Manjericão","maço",3,4,"Molhos e temperos"), it("Azeite extravirgem","L",4,2,"Molhos e temperos"), it("Caixa de pizza 30 cm","un",120,100,"Embalagens"), it("Gás","botijão",1,1,"Outros")];
     const movs = [];
-    return { pedidos, selos, P, add, itens, movs, U, C, nextId: () => ++sid, loja: { fechado: false, ate: null, motivo: "" } };
+    const ficha = { _todas:[[1,0.16],[13,1]], margherita:[[10,0.2],[3,0.12],[11,0.1],[12,0.01]], mussarela:[[10,0.2],[4,0.15]], calabresa:[[10,0.2],[4,0.12],[7,0.1]],
+      "tres-queijos":[[4,0.1],[5,0.05],[6,0.04]], diavola:[[10,0.2],[3,0.1],[8,0.07]], gorgonzola:[[4,0.1],[5,0.07],[9,0.08]] };
+    const baixas = new Set();
+    return { pedidos, selos, P, add, itens, movs, U, C, nextId: () => ++sid, ficha, baixas, loja: { fechado: false, ate: null, motivo: "" } };
   })());
   const sum = tel => D.selos.filter(s => s.tel === tel).reduce((a,s)=>a+s.delta,0);
   const u = new URL("https://x" + path), p = u.pathname;
@@ -609,7 +691,15 @@ function demo(method, path, body){
   if (p === "/admin/pedido/status") { const o = D.pedidos.find(x => x.id === body.id); const antes = o.status; o.status = body.status; let selo = null;
     if (o.fid && o.tel) { if (body.status === "retirado" && !D.selos.some(s => s.pedido_id === o.id)) { D.add(o.tel, 1, "pedido retirado", o.id, 0); selo = "+1"; }
       else if (antes === "retirado" && body.status !== "retirado") { D.selos = D.selos.filter(s => s.pedido_id !== o.id); selo = "removido"; } }
-    return out({ ok:true, selo, selos: o.tel ? sum(o.tel) : null }); }
+    let estoque = null; const r3 = n => Math.round(n * 1000) / 1000, now = new Date().toISOString();
+    if (body.status === "retirado" && !D.baixas.has(o.id)) { D.baixas.add(o.id); const uso = new Map(); estoque = [];
+      o.itens.forEach(it => [...(D.ficha[it.id] || []), ...D.ficha._todas].forEach(([id, q]) => uso.set(id, (uso.get(id) || 0) + q * it.qtd)));
+      uso.forEach((q, id) => { const i = D.itens.find(x => x.id === id); if (!i) return; const saldo = r3(Math.max(0, i.quantidade - q)), delta = r3(saldo - i.quantidade);
+        i.quantidade = saldo; i.atualizado_em = now; D.movs.push({ item_id:id, delta, saldo, tipo:"pedido", motivo:"Pedido " + o.id, criado_em:now }); estoque.push({ nome:i.nome, delta, saldo, acabando: saldo <= i.minimo }); }); }
+    else if (antes === "retirado" && body.status !== "retirado" && D.baixas.delete(o.id)) { estoque = "devolvido"; const m = new Map();
+      D.movs.filter(x => x.motivo === "Pedido " + o.id).forEach(x => m.set(x.item_id, (m.get(x.item_id) || 0) + x.delta));
+      m.forEach((d, id) => { const i = D.itens.find(x => x.id === id); if (!i || !d) return; i.quantidade = r3(i.quantidade - d); D.movs.push({ item_id:id, delta:r3(-d), saldo:i.quantidade, tipo:"estorno", motivo:"Pedido " + o.id, criado_em:now }); }); }
+    return out({ ok:true, selo, selos: o.tel ? sum(o.tel) : null, estoque }); }
   if (p === "/admin/cliente") { const tel = u.searchParams.get("tel"), s = sum(tel), peds = D.pedidos.filter(x => x.tel === tel);
     return out({ tel, selos:s, meta:META, podeResgatar:s>=META, nome: peds[0] ? peds[0].nome : "", pedidos:peds, historico: D.selos.filter(x => x.tel === tel).sort((a,b)=>b.criado_em.localeCompare(a.criado_em)) }); }
   if (p === "/admin/selo") { if (body.delta < 0 && sum(body.tel) <= 0) return Promise.reject(new Error("sem selos")); D.add(body.tel, body.delta, body.delta > 0 ? "selo manual" : "correção", null, 0); return out({ ok:true, selos:sum(body.tel) }); }
@@ -622,6 +712,10 @@ function demo(method, path, body){
     return out({ ...D.loja, hoje: hojeSP() });
   }
   const pub = i => ({ ...i, acabando: i.quantidade <= i.minimo });
+  if (p === "/admin/fichas") { const nomes = { _todas:"Em toda pizza" }; Object.entries(D.P).forEach(([k, v]) => nomes[k] = v[0]); const fichas = {};
+    Object.entries(D.ficha).forEach(([sb, l]) => fichas[sb] = l.map(([id, q]) => { const i = D.itens.find(x => x.id === id); return i && { sabor:sb, item_id:id, qtd:q, nome:i.nome, unidade:i.unidade }; }).filter(Boolean));
+    return out({ sabores: Object.entries(nomes).map(([id, nome]) => ({ id, nome })), fichas }); }
+  if (p === "/admin/ficha") { const m = new Map(); body.linhas.forEach(l => m.set(l.item_id, (m.get(l.item_id) || 0) + l.qtd)); D.ficha[body.sabor] = [...m]; return out({ ok:true }); }
   if (p === "/admin/estoque") return out({ unidades: D.U, categorias: D.C, itens: D.itens.slice().sort((a,b) => a.categoria.localeCompare(b.categoria) || a.nome.localeCompare(b.nome)).map(pub) });
   if (p === "/admin/estoque/item") { const nome = String(body.nome||"").trim();
     if (nome.length < 2) return Promise.reject(new Error("Confira: nome do item"));

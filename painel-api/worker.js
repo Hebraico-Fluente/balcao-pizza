@@ -23,11 +23,15 @@
  *   POST /admin/estoque/mov             {"id", "tipo": "entrada"|"saida"|"contagem", "qtd", "motivo"?}
  *   POST /admin/estoque/remover         {"id"}   tira o item da lista (o histórico fica)
  *   GET  /admin/estoque/historico?id=   últimos movimentos de um item
+ *   GET  /admin/fichas                  ficha técnica de cada sabor (o que sai do estoque por pizza)
+ *   POST /admin/ficha                   {"sabor", "linhas": [{"item_id", "qtd"}]}  troca a ficha do sabor
  *
  * Regras:
  *   - O selo entra SÓ quando a pizzaria marca o pedido como "retirado" (nunca no envio),
  *     e uma única vez por pedido. Assim ninguém ganha selo sem comprar.
  *   - O total é recalculado aqui com a tabela PRECOS.
+ *   - Baixa automática: ao marcar "retirado", sai do estoque a ficha de cada pizza (+ "Em toda pizza"),
+ *     uma única vez por pedido. Desfazer a retirada ou cancelar devolve exatamente o que saiu.
  *   - Dado pessoal guardado: nome e celular, só para o pedido e o cartão fidelidade.
  *
  * Configuração no painel da Cloudflare:
@@ -50,6 +54,7 @@ const ID_RE = /^B\d{4}-\d{4}-[A-Z0-9]{4}$/;
 const MAX_PEDIDOS_POR_IP_HORA = 12;
 const MAX_CONSULTAS_POR_IP_HORA = 10;
 const UNIDADES = ["kg", "g", "L", "ml", "un", "cx", "pct", "lata", "maço", "botijão"];
+const TODAS = "_todas";                 // ficha que vale para qualquer pizza (caixa, massa...)
 const CATEGORIAS = ["Massa", "Queijos", "Recheios", "Molhos e temperos", "Bebidas", "Embalagens", "Limpeza", "Outros"];
 
 /* ---------- utilidades ---------- */
@@ -157,6 +162,41 @@ async function itemPorId(env, id) {
 }
 const comAviso = it => ({ ...it, ativo: undefined, acabando: it.quantidade <= it.minimo });
 
+/* ---------- baixa automática por pizza ---------- */
+const r3 = n => Math.round(n * 1000) / 1000;
+async function darBaixa(env, p) {
+  const r = await env.DB.prepare("INSERT OR IGNORE INTO baixas (pedido_id, criado_em) VALUES (?, ?)").bind(p.id, agora()).run();
+  if (!(r.meta ? r.meta.changes : r.changes)) return [];                 // este pedido já deu baixa
+  const { results: ficha } = await env.DB.prepare("SELECT sabor, item_id, qtd FROM ficha").all();
+  const uso = new Map();
+  for (const it of JSON.parse(p.itens || "[]")) for (const f of ficha)
+    if (f.sabor === it.id || f.sabor === TODAS) uso.set(f.item_id, (uso.get(f.item_id) || 0) + f.qtd * it.qtd);
+  const feito = [];
+  for (const [id, q] of uso) {
+    const item = await itemPorId(env, id); if (!item) continue;
+    const saldo = r3(Math.max(0, item.quantidade - q)), delta = r3(saldo - item.quantidade);   // nunca fica negativo
+    await env.DB.prepare("UPDATE estoque_itens SET quantidade = ?, atualizado_em = ? WHERE id = ?").bind(saldo, agora(), id).run();
+    await env.DB.prepare("INSERT INTO estoque_mov (item_id, delta, saldo, tipo, motivo, criado_em) VALUES (?,?,?,?,?,?)")
+      .bind(id, delta, saldo, "pedido", "Pedido " + p.id, agora()).run();
+    feito.push({ nome: item.nome, unidade: item.unidade, delta, saldo, acabando: saldo <= item.minimo });
+  }
+  return feito;
+}
+async function devolverBaixa(env, p) {
+  const r = await env.DB.prepare("DELETE FROM baixas WHERE pedido_id = ?").bind(p.id).run();
+  if (!(r.meta ? r.meta.changes : r.changes)) return false;
+  const { results } = await env.DB.prepare("SELECT item_id, SUM(delta) AS d FROM estoque_mov WHERE motivo = ? AND tipo IN ('pedido','estorno') GROUP BY item_id").bind("Pedido " + p.id).all();
+  for (const m of results) {
+    const volta = r3(-m.d); if (!volta) continue;
+    const item = await env.DB.prepare("SELECT * FROM estoque_itens WHERE id = ?").bind(m.item_id).first(); if (!item) continue;
+    const saldo = r3(item.quantidade + volta);
+    await env.DB.prepare("UPDATE estoque_itens SET quantidade = ?, atualizado_em = ? WHERE id = ?").bind(saldo, agora(), item.id).run();
+    await env.DB.prepare("INSERT INTO estoque_mov (item_id, delta, saldo, tipo, motivo, criado_em) VALUES (?,?,?,?,?,?)")
+      .bind(item.id, volta, saldo, "estorno", "Pedido " + p.id, agora()).run();
+  }
+  return true;
+}
+
 export async function handle(req, env) {
   const url = new URL(req.url), path = url.pathname;
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(req, true) });
@@ -226,7 +266,10 @@ export async function handle(req, env) {
         selo = "removido";
       }
     }
-    return json(req, { ok: true, selo, selos: p.tel ? await selosDe(env, p.tel) : null });
+    let estoque = null;
+    if (b.status === "retirado") estoque = await darBaixa(env, p);
+    else if (p.status === "retirado" && await devolverBaixa(env, p)) estoque = "devolvido";
+    return json(req, { ok: true, selo, selos: p.tel ? await selosDe(env, p.tel) : null, estoque });
   }
 
   if (req.method === "GET" && path === "/admin/cliente") {
@@ -277,6 +320,30 @@ export async function handle(req, env) {
     await env.DB.prepare("INSERT INTO config (chave, valor, atualizado_em) VALUES ('loja', ?, ?) ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor, atualizado_em = excluded.atualizado_em")
       .bind(JSON.stringify(v), agora()).run();
     return json(req, { ok: true, ...(await lerLoja(env)), hoje: hojeSP() });
+  }
+
+  if (req.method === "GET" && path === "/admin/fichas") {
+    const { results } = await env.DB.prepare(`SELECT f.sabor, f.item_id, f.qtd, e.nome, e.unidade FROM ficha f
+      JOIN estoque_itens e ON e.id = f.item_id AND e.ativo = 1 ORDER BY e.nome`).all();
+    const fichas = {};
+    for (const r of results) (fichas[r.sabor] = fichas[r.sabor] || []).push(r);
+    return json(req, { sabores: [{ id: TODAS, nome: "Em toda pizza" }, ...Object.entries(PRECOS).map(([id, v]) => ({ id, nome: v.nome }))], fichas });
+  }
+  if (req.method === "POST" && path === "/admin/ficha") {
+    const b = await req.json().catch(() => ({}));
+    if (b.sabor !== TODAS && !PRECOS[b.sabor]) return json(req, { error: "sabor desconhecido" }, 400);
+    const linhas = Array.isArray(b.linhas) ? b.linhas : [];
+    if (linhas.length > 25) return json(req, { error: "ingredientes demais" }, 400);
+    const vistas = new Map();
+    for (const l of linhas) {
+      const q = num(l && l.qtd), item = await itemPorId(env, l && l.item_id);
+      if (!item) return json(req, { error: "Ingrediente não existe no estoque." }, 400);
+      if (!(q > 0) || q > 1000) return json(req, { error: `Confira a quantidade de ${item.nome}.` }, 400);
+      vistas.set(item.id, r3((vistas.get(item.id) || 0) + q));
+    }
+    await env.DB.prepare("DELETE FROM ficha WHERE sabor = ?").bind(b.sabor).run();
+    for (const [id, q] of vistas) await env.DB.prepare("INSERT INTO ficha (sabor, item_id, qtd) VALUES (?,?,?)").bind(b.sabor, id, q).run();
+    return json(req, { ok: true, linhas: vistas.size });
   }
 
   if (req.method === "GET" && path === "/admin/estoque") {
