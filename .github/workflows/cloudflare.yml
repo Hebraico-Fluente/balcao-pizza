@@ -63,16 +63,7 @@ jobs:
           if [ -n "$ADMIN_KEY" ]; then printf '%s' "$ADMIN_KEY" | $WRANGLER secret put ADMIN_KEY -c painel-api/wrangler.toml; fi
 
       - name: Montar o site ligado ao painel
-        run: |
-          mkdir dist
-          tar --exclude=./.git --exclude=./.github --exclude=./dist --exclude='./*-api' --exclude='*.md' \
-              --exclude=./wrangler.toml --exclude=node_modules --exclude='./_e2e*' --exclude=./.wrangler --exclude='*.log' \
-              -cf - . | tar -xf - -C dist
-          if [ -e dist/.wrangler ] || ls dist/*.log >/dev/null 2>&1; then echo "::error::Arquivo interno entrou no site."; exit 1; fi
-          sed -i "s#panelApi: \"\",#panelApi: \"$PANEL_URL\",#" dist/index.html
-          sed -i "s#const API_PADRAO = \"\";#const API_PADRAO = \"$PANEL_URL\";#" dist/painel/index.html
-          grep -q "panelApi: \"$PANEL_URL\"" dist/index.html || { echo "::error::Não consegui ligar o site ao painel."; exit 1; }
-          [ -f dist/404.html ] || cp dist/index.html dist/404.html
+        run: sh scripts/montar-site.sh
 
       - name: Publicar o site
         run: |

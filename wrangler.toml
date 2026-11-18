@@ -1,8 +1,12 @@
-# Site da Balcão na Cloudflare (só arquivos estáticos). Publicado pelo GitHub Actions.
-# A pasta dist/ é montada na publicação, já ligada ao painel.
+# Site da Balcão na Cloudflare (só arquivos estáticos).
+# A pasta dist/ é montada pelo scripts/montar-site.sh antes de cada deploy, já ligada ao painel.
+# Funciona pelo GitHub Actions e também pelo deploy conectado ao GitHub no painel da Cloudflare.
 name = "balcao-pizza"
 compatibility_date = "2025-09-01"
 workers_dev = true
+
+[build]
+command = "sh scripts/montar-site.sh"
 
 [assets]
 directory = "./dist"
