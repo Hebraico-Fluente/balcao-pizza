@@ -750,6 +750,17 @@ function flourBurst(){ if(reduce||!flourEl.animate) return;
   addEventListener("scroll",on,{passive:true}); addEventListener("resize",on); frame();
 })();
 
+/* ---------- celular: miniaturas do cardápio entram girando ---------- */
+(()=>{ if(reduce || !("IntersectionObserver" in window) || !Element.prototype.animate) return;
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if(!e.isIntersecting || !mobile()) return; io.unobserve(e.target);
+    const k = [...e.target.closest("ul,ol").children].indexOf(e.target.closest("li"));
+    e.target.animate([{transform:"rotate(-200deg) scale(.4)",opacity:0},{transform:"rotate(0) scale(1)",opacity:1}],
+      {duration:700,delay:Math.max(0,k)*70,easing:"cubic-bezier(.33,1,.68,1)",fill:"backwards"});
+  }), {rootMargin:"0px 0px -12% 0px"});
+  requestAnimationFrame(()=>document.querySelectorAll(".row img").forEach(i=>io.observe(i)));
+})();
+
 /* ---------- vitrine ---------- */
 let current = null, qty = 1;
 MENU.forEach(p => { const im = new Image(); im.src = img(p.id,"lg"); }); // pré-carrega: a troca fica instantânea
@@ -767,18 +778,21 @@ function select(id, animate=true){
   const im = $("#stageImg");
   im.alt = "Pizza " + p.name;
   im.src = img(id,"lg");
-  if(animate && im.animate){
-    if(reduce) im.animate([{opacity:0},{opacity:1}],{duration:150});
-    else { im.animate([
-        {transform:"translateY(-55%) rotate(-220deg) scale(.55)",opacity:0},
-        {opacity:1,offset:.2},
-        {transform:"translateY(0) rotate(0) scale(1.03)",opacity:1,offset:.78},
-        {transform:"translateY(-2%) rotate(0) scale(1)",offset:.9},
-        {transform:"translateY(0) rotate(0) scale(1)",opacity:1}
-      ],{duration:820,easing:"cubic-bezier(.33,1,.68,1)"});
-      flourBurst(); }
-  }
+  if(animate) spinIn(im);
   updateAdd();
+}
+// a pizza desce girando até o prato (computador e celular)
+function spinIn(im = $("#stageImg"), delay = 0){
+  if(!im.animate) return;
+  if(reduce) return void im.animate([{opacity:0},{opacity:1}],{duration:150});
+  im.animate([
+    {transform:"translateY(-55%) rotate(-220deg) scale(.55)",opacity:0},
+    {opacity:1,offset:.2},
+    {transform:"translateY(0) rotate(0) scale(1.03)",opacity:1,offset:.78},
+    {transform:"translateY(-2%) rotate(0) scale(1)",offset:.9},
+    {transform:"translateY(0) rotate(0) scale(1)",opacity:1}
+  ],{duration:820,delay,easing:"cubic-bezier(.33,1,.68,1)",fill:"backwards"});
+  flourBurst();
 }
 function updateAdd(){
   $("#qVal").textContent = qty;
@@ -798,8 +812,10 @@ list.addEventListener("pointerover", e => {
 });
 list.addEventListener("click", e => {
   const r = e.target.closest(".row"); if(!r) return;
-  clearTimeout(hoverT); select(r.dataset.pick);
-  if(mobile()) openStage();
+  clearTimeout(hoverT);
+  // no celular a folha sobe primeiro e a pizza gira já com ela à vista
+  if(mobile()){ select(r.dataset.pick, false); openStage(); spinIn($("#stageImg"), 180); }
+  else select(r.dataset.pick);
 });
 list.addEventListener("keydown", e => {
   if(!["ArrowDown","ArrowUp"].includes(e.key)) return;
