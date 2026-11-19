@@ -203,6 +203,12 @@ footer a{text-decoration:none}
 @media (hover:hover){footer a:hover{color:var(--ink)}}
 
 
+.m-plate{display:none}
+@media (max-width:900px){
+  .m-plate{display:block;position:relative;z-index:2;width:min(260px,64vw);margin:0 auto 28px;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .m-dish{display:grid;place-items:center;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 50%,#fff 0 58%,#F1EBE2 58.5% 70%,transparent 70.5%)}
+  .m-dish img{width:82%;aspect-ratio:1;object-fit:cover;border-radius:50%;box-shadow:0 22px 40px -18px rgba(60,20,8,.5),0 2px 6px rgba(60,20,8,.12);will-change:transform;pointer-events:none}
+}
 /* ---------- modo feed (uma pizza por tela) ---------- */
 .feed-cta{display:inline-flex;align-items:center;gap:10px;height:46px;padding:0 18px 0 7px;border-radius:999px;border:0;background:var(--ink);color:#fff;font:500 15px var(--sans);cursor:pointer}
 .feed-cta i{width:32px;height:32px;border-radius:50%;background:var(--wine);display:grid;place-items:center;font-style:normal;font-size:12px}
@@ -426,6 +432,7 @@ footer a{text-decoration:none}
         <h2>Cardápio</h2>
         <div><p style="margin:0 0 14px">Seis pizzas, todas com 30 cm e 6 pedaços. Toque numa pizza para ver de perto, escolher a quantidade e deixar uma observação.</p><button type="button" class="feed-cta" data-open-feed><i>▶</i>Ver em modo feed e curtir</button></div>
       </div>
+      <button type="button" class="m-plate" id="mPlate" aria-label="Ver a Margherita de perto"><span class="m-dish"><img id="mPlateImg" src="img/lg/margherita.jpg" alt="" width="901" height="901"></span></button>
       <div class="menu">
         <aside class="stage" id="stage" aria-label="Pizza selecionada">
           <button class="sheet-close" type="button" data-close-stage aria-label="Fechar">×</button>
@@ -740,7 +747,11 @@ function flourBurst(){ if(reduce||!flourEl.animate) return;
   const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)), ease=x=>1-Math.pow(1-x,3);
   let ticking=false;
   function frame(){ ticking=false;
-    if(innerWidth<=900){ im.style.translate=""; im.style.rotate=""; im.style.scale=""; return; }
+    if(innerWidth<=900){ im.style.translate=""; im.style.rotate=""; im.style.scale="";
+      const mp=$("#mPlate"), mi=$("#mPlateImg"); if(!mp) return;
+      const r=mp.getBoundingClientRect(), vh=innerHeight, p=ease(clamp((vh-r.top)/(vh*.75)));
+      mi.style.translate=`0 ${(1-p)*-38}vh`; mi.style.rotate=`${(1-p)*-260}deg`; mi.style.scale=`${.5+.5*p}`;
+      return; }
     const r=$("#stage").getBoundingClientRect(), vh=innerHeight;
     const p=ease(clamp((vh-r.top)/(vh*.85)));
     im.style.translate=`0 ${(1-p)*-45}vh`; im.style.rotate=`${(1-p)*-260}deg`; im.style.scale=`${.5+.5*p}`;
@@ -823,6 +834,8 @@ list.addEventListener("keydown", e => {
   e.preventDefault(); const nx=rows[(i+(e.key==="ArrowDown"?1:-1)+rows.length)%rows.length];
   nx.focus(); if(!mobile()) select(nx.dataset.pick);
 });
+
+$("#mPlate").addEventListener("click", () => { select("margherita", false); openStage(); spinIn($("#stageImg"), 180); });
 
 /* ---------- folhas: vitrine no celular e pedido ---------- */
 const scrim=$("#scrim"), stage=$("#stage"), drawer=$("#drawer"); let lastFocus;
