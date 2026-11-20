@@ -5,6 +5,13 @@ name = "balcao-pizza"
 compatibility_date = "2025-09-01"
 workers_dev = true
 
+# Domínio próprio (a zona balcaopizza.com.br está nesta conta da Cloudflare).
+# O deploy cria/mantém os Custom Domains do Worker, com DNS e certificado automáticos.
+routes = [
+  { pattern = "balcaopizza.com.br", custom_domain = true },
+  { pattern = "www.balcaopizza.com.br", custom_domain = true },
+]
+
 [build]
 command = "sh scripts/montar-site.sh"
 

@@ -39,7 +39,7 @@
  *   - Secret       ADMIN_KEY   (senha do painel; use uma senha longa)
  */
 
-const ALLOWED_ORIGINS = ["https://moshikgueta.github.io"];
+const ALLOWED_ORIGINS = ["https://balcaopizza.com.br", "https://www.balcaopizza.com.br", "https://moshikgueta.github.io"];
 const META_SELOS = 10;                 // igual a CONFIG.loyaltyGoal no site
 const PRECOS = {                       // centavos — MANTENHA IGUAL ao MENU do index.html
   "mussarela":    { nome: "Mussarela",             centavos: 4490 },
