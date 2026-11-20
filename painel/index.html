@@ -198,6 +198,57 @@ dialog.dlg::backdrop{background:rgba(30,22,17,.45)}
 .mini i.on{background:var(--wine)}
 .toast{position:fixed;left:50%;bottom:22px;translate:-50% 0;z-index:30;padding:11px 16px;border-radius:10px;background:var(--ink);color:#fff;font-size:14px;opacity:0;transform:translateY(8px);transition:opacity .2s ease,transform .2s var(--ease);pointer-events:none}
 .toast.show{opacity:1;transform:none}
+
+/* etapas do pedido (botões grandes para a mão com farinha) */
+.st.forno{background:#FBE3D6;color:#B4471A}
+.nb{flex:none;display:grid;place-items:center;min-width:48px;height:48px;padding:0 8px;border-radius:12px;background:var(--ink);color:#fff;font:400 26px/1 var(--serif);font-variant-numeric:tabular-nums}
+.ord-h .who{flex:1;min-width:0}
+.ord-h{align-items:center}
+.prog{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.prog i{height:6px;border-radius:3px;background:var(--bg-2)}
+.prog i.on{background:var(--wine)}
+.prog.c i{background:var(--bg-2)}
+.prog-l{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:-4px}
+.big{width:100%;min-height:62px;font-size:18px;border-radius:12px;letter-spacing:.01em}
+.big.b-forno{background:#B4471A;color:#fff}
+.fornoT{margin:0;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:#FBE3D6;color:#8A3412;font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+.fornoT.late{background:#B4471A;color:#fff}
+.ord-f .btn{min-height:44px}
+.nota{display:inline-flex;gap:6px;align-items:center;padding:3px 9px;border-radius:6px;background:#FFF3D6;color:#7A5410;font-size:12.5px;font-weight:600}
+.coment{margin:0;padding:8px 10px;border-radius:8px;background:var(--bg-2);font-size:13px;color:var(--ink)}
+/* massas do dia */
+.mbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:12px 14px;margin-bottom:16px;border-radius:12px;background:var(--card);box-shadow:0 0 0 1px var(--line)}
+.mbar .mb-n{display:flex;align-items:baseline;gap:10px;margin-right:auto;min-width:0}
+.mbar .mb-n span{white-space:nowrap;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mbar .mb-n b{font:400 34px/1 var(--serif);font-variant-numeric:tabular-nums}
+.mbar .mb-n small{color:var(--muted);font-size:13px}
+.mbar.zero{box-shadow:0 0 0 2px var(--red);background:var(--red-soft)}
+.mbar.zero .mb-n b{color:var(--red)}
+.mbar .acts .btn{min-height:48px}
+@media(max-width:600px){.mbar .mb-n{flex-wrap:wrap;gap:4px 10px;width:100%}.mbar .acts{width:100%}.mbar .acts .btn{flex:1}}
+.list.flat{display:grid;gap:10px}
+.stepper{display:grid;grid-template-columns:60px 1fr 60px;gap:8px;align-items:center}
+.stepper .btn{min-height:56px;font-size:24px}
+.stepper input{text-align:center;font:400 40px/1 var(--serif)!important;height:64px!important}
+/* avaliações e telão */
+.avs{display:flex;flex-wrap:wrap;gap:22px;align-items:center}
+.avs .m{font:400 64px/1 var(--serif)}
+.avs .m small{font:500 14px var(--sans);color:var(--muted);display:block;margin-top:4px}
+.dist{flex:1;min-width:200px;display:grid;gap:5px;font-size:13px}
+.dist div{display:grid;grid-template-columns:30px 1fr 30px;gap:8px;align-items:center}
+.dist b{display:block;height:8px;border-radius:4px;background:#F2B33D}
+.dist span:nth-child(2){background:var(--bg-2);border-radius:4px;overflow:hidden}
+.avl{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.avl li{padding:14px 16px;border-radius:12px;background:var(--card);box-shadow:0 0 0 1px var(--line);display:grid;gap:6px}
+.avl .h{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted)}
+.avl .h b{color:var(--ink)}
+.avl .s{color:#D99A1E;letter-spacing:2px;font-size:17px}
+.avl p{margin:0;font-size:14.5px}
+.note{margin:10px 0 0;font-size:13px;color:var(--muted);line-height:1.5}
+.cardgap{display:grid;gap:14px}
+.card h2.t{margin:0 0 6px;font:400 28px/1.1 var(--serif)}
+.linkbox{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.linkbox input{flex:1;min-width:220px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -224,16 +275,40 @@ dialog.dlg::backdrop{background:rgba(30,22,17,.45)}
       <button type="button" role="tab" data-tab="selos" aria-selected="false">Selos</button>
       <button type="button" role="tab" data-tab="clientes" aria-selected="false">Clientes</button>
       <button type="button" role="tab" data-tab="estoque" aria-selected="false">Estoque<span class="n" id="nLow" hidden>0</span></button>
+      <button type="button" role="tab" data-tab="avaliacoes" aria-selected="false">Avaliações</button>
+      <button type="button" role="tab" data-tab="telao" aria-selected="false">Telão</button>
     </nav>
   </header>
   <div class="demo-bar" id="demoBar" hidden>Modo demonstração: dados de exemplo, nada é salvo. Um pedido novo chega a cada 40 segundos.</div>
   <main>
     <section id="t-pedidos">
+      <div class="mbar" id="mbar" hidden>
+        <div class="mb-n"><span>Massas hoje</span><b id="mRest">—</b><small id="mInfo"></small></div>
+        <div class="acts" id="mActs"></div>
+      </div>
       <div class="bar">
         <div class="seg" role="group" aria-label="Filtro"><button type="button" data-f="abertos" aria-pressed="true">Em andamento</button><button type="button" data-f="hoje" aria-pressed="false">Hoje</button><button type="button" data-f="todos" aria-pressed="false">Todos</button></div>
         <span class="sum" id="sum"></span>
       </div>
       <div id="orders"></div>
+    </section>
+    <section id="t-avaliacoes" hidden>
+      <div class="wrap2 cardgap">
+        <div class="card" id="avResumo"><div class="empty">Carregando…</div></div>
+        <form class="card" id="gForm" novalidate>
+          <h2 class="t">Link de avaliação do Google</h2>
+          <p class="preview">No Perfil da Empresa no Google: <b>Pedir avaliações</b> → copiar o link. Cole aqui.</p>
+          <div class="linkbox"><input class="in" name="google" inputmode="url" autocomplete="off" placeholder="https://g.page/r/.../review"><button class="btn b-wine" type="submit">Salvar</button></div>
+          <p class="err" id="gErr" role="alert"></p>
+          <p class="note">Todo cliente que avalia vê o botão do Google, qualquer que seja a nota. Quem dá de 1 a 4 estrelas vê antes uma caixa de comentário privado para a equipe. O Google proíbe mandar só os clientes satisfeitos para lá (“review gating”), então o painel nunca filtra por nota.</p>
+        </form>
+        <ul class="avl" id="avLista"></ul>
+      </div>
+    </section>
+    <section id="t-telao" hidden>
+      <div class="wrap2 cardgap">
+        <div class="card" id="telaoCard"><div class="empty">Carregando…</div></div>
+      </div>
     </section>
     <section id="t-selos" hidden>
       <div class="wrap2">
@@ -316,6 +391,14 @@ dialog.dlg::backdrop{background:rgba(30,22,17,.45)}
   <pre class="shop" id="shopTxt"></pre>
   <div class="acts"><button class="btn b-line" type="button" data-close>Fechar</button><button class="btn b-line" type="button" id="shopCopy">Copiar</button><a class="btn b-wa" id="shopWa" target="_blank" rel="noopener">Mandar no WhatsApp</a></div>
 </form></dialog>
+<dialog class="dlg" id="dlgMassas"><form method="dialog" id="massasForm" novalidate>
+  <h3>Massas de hoje</h3>
+  <p class="preview">Quantas bolinhas de massa vocês fizeram hoje? O site mostra “Restam N massas hoje” e para de aceitar pedidos quando chega a zero. Amanhã zera sozinho.</p>
+  <div class="stepper"><button class="btn b-line" type="button" data-step="-1" aria-label="Menos uma">−</button><input class="in" name="feitas" inputmode="numeric" aria-label="Massas feitas hoje"><button class="btn b-line" type="button" data-step="1" aria-label="Mais uma">+</button></div>
+  <div id="mEstoque"></div>
+  <p class="err" id="massasErr" role="alert"></p>
+  <div class="acts"><button class="btn b-ghost b-sm left" type="button" id="mDesligar">Parar de contar hoje</button><button class="btn b-line" type="button" data-close>Cancelar</button><button class="btn b-wine" type="submit">Salvar</button></div>
+</form></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -330,8 +413,14 @@ const telFmt = t => t ? `(${t.slice(0,2)}) ${t.slice(2,t.length-4)}-${t.slice(-4
 const normTel = v => { let d = String(v||"").replace(/\D/g,""); if (d.length > 11 && d.startsWith("55")) d = d.slice(2); return /^[1-9]{2}9?\d{8}$/.test(d) ? d : ""; };
 const hora = iso => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
 const dia = iso => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
-const STATUS_TXT = { novo: "Novo", preparo: "Em preparo", pronto: "Pronto", retirado: "Retirado", cancelado: "Cancelado" };
-const NEXT = { novo: ["preparo", "Começar preparo"], preparo: ["pronto", "Marcar pronto"], pronto: ["retirado", "Cliente retirou"] };
+const STATUS_TXT = { novo: "Recebido", preparo: "Massa aberta", forno: "No forno", pronto: "Pronto", retirado: "Retirado", cancelado: "Cancelado" };
+const NEXT = { novo: ["preparo", "Abrir a massa"], preparo: ["forno", "Pôr no forno"], forno: ["pronto", "Saiu do forno · pronta"], pronto: ["retirado", "Cliente retirou"] };
+const PREV = { preparo: "novo", forno: "preparo", pronto: "forno" };
+const ORDEM = ["novo", "preparo", "forno", "pronto", "retirado"], ABERTOS = ["novo", "preparo", "forno", "pronto"];
+const SITE = new URL("../", location.href).href;          // o painel fica em /painel/ do site
+const linkAcomp = (p, extra = "") => p.token ? `${SITE}acompanhar/?t=${p.token}${extra}` : "";
+const waLink = (tel, txt) => (tel ? `https://wa.me/55${tel}` : "https://wa.me/") + "?text=" + encodeURIComponent(txt);
+let OFFSET = 0;                                            // relógio do servidor − relógio deste aparelho
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove("show"),2200); }
 
 /* ---------- acesso ---------- */
@@ -353,7 +442,8 @@ async function call(method, path, body){
 let filtro = "abertos", conhecidos = null, ultimos = [];
 async function loadOrders(silent){
   try {
-    const { pedidos } = await call("GET", "/admin/pedidos?status=" + filtro);
+    const { pedidos, agora } = await call("GET", "/admin/pedidos?status=" + filtro);
+    if (agora) OFFSET = Date.parse(agora) - Date.now();
     setLive(true);
     const novos = conhecidos ? pedidos.filter(p => !conhecidos.has(p.id) && p.status === "novo") : [];
     if (filtro === "abertos" || !conhecidos) conhecidos = new Set([...(conhecidos || []), ...pedidos.map(p => p.id)]);
@@ -362,29 +452,39 @@ async function loadOrders(silent){
   } catch (e) { setLive(false); if (!silent) toast(e.message); }
 }
 function orderCard(p, fresh){
-  const nx = NEXT[p.status], qtd = p.itens.reduce((s,i)=>s+i.qtd,0);
-  const waMsg = `Olá, ${p.nome}! Seu pedido ${p.id} da Balcão está pronto para retirar 🍕`;
+  const nx = NEXT[p.status], qtd = p.itens.reduce((s,i)=>s+i.qtd,0), k = ORDEM.indexOf(p.status), track = linkAcomp(p);
+  const primeiro = String(p.nome || "").split(/\s+/)[0];
+  const waPronto = `Olá, ${primeiro}! Seu pedido${p.numero ? " nº " + p.numero : ""} da Balcão está pronto para retirar 🍕` + (track ? `\nAcompanhe: ${track}` : "");
+  const waAval = `Olá, ${primeiro}! Aqui é da Balcão Pizza 🍕 Obrigado por pedir com a gente. Se puder, conta como estava a pizza? Leva 5 segundos: ${linkAcomp(p, "&a=1")}`;
   return `<article class="ord ${fresh ? "fresh" : ""}" data-id="${p.id}">
-    <div class="ord-h"><div><b>${esc(p.nome)}</b><small>${p.id} · ${dia(p.criado_em)} ${hora(p.criado_em)} · ${qtd} pizza${qtd>1?"s":""}</small></div><span class="st ${p.status}">${STATUS_TXT[p.status]}</span></div>
+    <div class="ord-h"><span class="nb" aria-label="Número do dia">${p.numero ? String(p.numero).padStart(2,"0") : "—"}</span><div class="who"><b>${esc(p.nome)}</b><small>${p.id} · ${dia(p.criado_em)} ${hora(p.criado_em)} · ${qtd} pizza${qtd>1?"s":""}</small></div><span class="st ${p.status}">${STATUS_TXT[p.status]}</span></div>
+    ${p.status !== "cancelado" ? `<div class="prog" aria-hidden="true">${ORDEM.map((_, i) => `<i class="${i <= k ? "on" : ""}"></i>`).join("")}</div>` : ""}
     <ul class="items">${p.itens.map(i => `<li><div><span>${i.qtd}×</span> ${esc(i.nome)}${i.obs ? `<em>${esc(i.obs)}</em>` : ""}</div></li>`).join("")}</ul>
-    <div class="meta"><span class="pickup">Retirada: ${esc(p.retirada || "o quanto antes")}</span>${p.pagamento ? `<span>${esc(p.pagamento)}</span>` : ""}${p.fid && p.tel ? `<span class="fid">Selo · ${telFmt(p.tel)}</span>` : ""}</div>
+    <div class="meta"><span class="pickup">Retirada: ${esc(p.retirada || "o quanto antes")}</span>${p.pagamento ? `<span>${esc(p.pagamento)}</span>` : ""}${p.fid && p.tel ? `<span class="fid">Selo · ${telFmt(p.tel)}</span>` : ""}${p.nota ? `<span class="nota">★ ${p.nota}/5</span>` : ""}</div>
     ${p.obs ? `<p class="obs">${esc(p.obs)}</p>` : ""}
+    ${p.comentario ? `<p class="coment">“${esc(p.comentario)}”</p>` : ""}
+    ${p.status === "forno" && p.forno_em ? `<p class="fornoT" data-forno="${p.forno_em}">No forno</p>` : ""}
+    ${nx ? `<button class="btn big ${nx[0]==="retirado"?"b-green":nx[0]==="forno"?"b-forno":"b-wine"}" type="button" data-st="${nx[0]}">${nx[1]}</button>` : ""}
     <div class="ord-f"><span class="total">${brl(p.total)}</span>
-      ${p.status === "pronto" && p.tel ? `<a class="btn b-wa b-sm" target="_blank" rel="noopener" href="https://wa.me/55${p.tel}?text=${encodeURIComponent(waMsg)}">Avisar</a>` : ""}
-      ${nx ? `<button class="btn b-sm ${nx[0]==="retirado"?"b-green":"b-wine"}" type="button" data-st="${nx[0]}">${nx[1]}</button>` : ""}
-      ${["novo","preparo","pronto"].includes(p.status) ? `<button class="btn b-ghost b-sm" type="button" data-st="cancelado">Cancelar</button>` : ""}
+      ${p.status === "pronto" ? `<a class="btn b-wa b-sm" target="_blank" rel="noopener" href="${waLink(p.tel, waPronto)}">Avisar</a>` : ""}
+      ${p.status === "retirado" && track ? `<a class="btn b-wa b-sm" target="_blank" rel="noopener" href="${waLink(p.tel, waAval)}" title="${p.tel ? "Abre a conversa com o cliente" : "Escolha a conversa do cliente no WhatsApp"}">Pedir avaliação no WhatsApp</a>` : ""}
+      ${PREV[p.status] ? `<button class="btn b-line b-sm" type="button" data-st="${PREV[p.status]}" aria-label="Voltar para ${STATUS_TXT[PREV[p.status]]}">↶ Voltar</button>` : ""}
+      ${ABERTOS.includes(p.status) ? `<button class="btn b-ghost b-sm" type="button" data-st="cancelado">Cancelar</button>` : ""}
       ${["retirado","cancelado"].includes(p.status) ? `<button class="btn b-line b-sm" type="button" data-st="pronto">Desfazer</button>` : ""}
     </div></article>`;
 }
+/* tempo no forno (a napoletana assa ~90 s) */
+setInterval(() => { document.querySelectorAll("[data-forno]").forEach(el => { const s = Math.max(0, Math.floor((Date.now() + OFFSET - Date.parse(el.dataset.forno)) / 1000));
+  el.textContent = `🔥 No forno há ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` + (s >= 90 ? " · já deu 90 s" : ""); el.classList.toggle("late", s >= 90); }); }, 1000);
 function renderOrders(fresh = new Set()){
-  const open = ultimos.filter(p => ["novo","preparo","pronto"].includes(p.status));
+  const open = ultimos.filter(p => ABERTOS.includes(p.status));
   $("#nOpen").hidden = !open.length && filtro === "abertos"; $("#nOpen").textContent = open.length;
   document.title = (open.filter(p=>p.status==="novo").length ? `(${open.filter(p=>p.status==="novo").length}) ` : "") + "Painel · Balcão";
   const fat = ultimos.filter(p => p.status !== "cancelado").reduce((s,p)=>s+p.total,0);
   $("#sum").innerHTML = `<b>${ultimos.length}</b> pedido${ultimos.length===1?"":"s"} · <b>${brl(fat)}</b>`;
   if (filtro === "abertos") {
-    const cols = [["novo","Novos","var(--red)"],["preparo","Em preparo","var(--amber)"],["pronto","Prontos para retirar","var(--blue)"]];
-    $("#orders").innerHTML = `<div class="cols">${cols.map(([st,t,c]) => { const l = ultimos.filter(p=>p.status===st);
+    const cols = [[["novo"],"Recebidos","var(--red)"],[["preparo","forno"],"Na bancada e no forno","#B4471A"],[["pronto"],"Prontos para retirar","var(--blue)"]];
+    $("#orders").innerHTML = `<div class="cols">${cols.map(([st,t,c]) => { const l = ultimos.filter(p=>st.includes(p.status));
       return `<div class="col"><h2><i style="background:${c}"></i>${t} · ${l.length}</h2><div class="list">${l.length ? l.map(p=>orderCard(p,fresh.has(p.id))).join("") : `<div class="empty">Nada por aqui.</div>`}</div></div>`; }).join("")}</div>`;
   } else {
     $("#orders").innerHTML = ultimos.length ? `<div class="list flat">${ultimos.map(p=>orderCard(p,false)).join("")}</div>` : `<div class="empty">Nenhum pedido.</div>`;
@@ -400,6 +500,7 @@ $("#orders").addEventListener("click", async e => {
     const est = Array.isArray(r.estoque) && r.estoque.length ? " · estoque baixado" + (r.estoque.some(x => x.acabando) ? ` (acabando: ${r.estoque.filter(x => x.acabando).map(x => x.nome).join(", ")})` : "") : r.estoque === "devolvido" ? " · estoque devolvido" : "";
     toast((r.selo === "+1" ? `Retirado · selo marcado (${r.selos % META || (r.selos ? META : 0)}/${META})` : r.selo === "removido" ? "Desfeito · selo do pedido removido" : STATUS_TXT[st]) + est);
     if (r.estoque) loadStock(true);
+    if (["cancelado", "pronto"].includes(st)) loadMassas();
     await loadOrders(true);
   } catch (err) { toast(err.message); b.disabled = false; }
 });
@@ -486,6 +587,71 @@ $("#lojaForm").addEventListener("submit", async e => {
     toast(LOJA.fechado ? "Loja fechada · o site já mostra o aviso" : "Loja aberta · pedidos liberados no site"); }
   catch (x) { err.textContent = x.message; }
 });
+
+/* ---------- massas do dia ---------- */
+let MS = null;
+async function loadMassas(){ try { MS = await call("GET", "/admin/massas"); renderMassas(); } catch (e) {} }
+function renderMassas(){
+  const m = MS; $("#mbar").hidden = false; $("#mbar").classList.toggle("zero", m.ativo && m.restam === 0);
+  if (!m.ativo) { $("#mRest").textContent = "—"; $("#mInfo").textContent = m.site ? `${m.site} pizza${m.site>1?"s":""} pelo site hoje · sem limite` : "sem limite no site";
+    $("#mActs").innerHTML = `<button class="btn b-wine" type="button" data-mset>Informar massas de hoje</button>`; return; }
+  $("#mRest").textContent = m.restam;
+  $("#mInfo").textContent = `restam de ${m.feitas} · ${m.site} no site · ${m.balcao} no balcão`;
+  $("#mActs").innerHTML = `<button class="btn b-line" type="button" data-mb="1">Vendi 1 no balcão</button>${m.balcao ? `<button class="btn b-ghost b-sm" type="button" data-mb="-1" aria-label="Desfazer uma venda no balcão">↶ 1</button>` : ""}<button class="btn b-line" type="button" data-mset>Corrigir</button>`;
+}
+$("#mActs").addEventListener("click", async e => {
+  const b = e.target.closest("[data-mb]");
+  if (b) { b.disabled = true; try { MS = await call("POST", "/admin/massas", { balcao: +b.dataset.mb }); renderMassas(); toast(`Massas: restam ${MS.restam}`); } catch (x) { toast(x.message); b.disabled = false; } return; }
+  if (!e.target.closest("[data-mset]")) return;
+  const f = $("#massasForm"); $("#massasErr").textContent = ""; f.feitas.value = MS && MS.ativo ? MS.feitas : "";
+  $("#mDesligar").hidden = !(MS && MS.ativo);
+  $("#mEstoque").innerHTML = (MS && MS.estoque || []).map(i => `<button class="btn b-line b-sm" type="button" data-use="${Math.floor(i.quantidade)}">Usar o estoque: ${fmtQ(i.quantidade)} un de ${esc(i.nome)}</button>`).join("");
+  $("#dlgMassas").showModal(); f.feitas.focus();
+});
+$("#massasForm").addEventListener("click", e => { const st = e.target.closest("[data-step]"), u = e.target.closest("[data-use]"), f = $("#massasForm");
+  if (st) f.feitas.value = Math.max(0, (parseInt(f.feitas.value, 10) || 0) + +st.dataset.step);
+  if (u) f.feitas.value = u.dataset.use; });
+$("#massasForm").addEventListener("submit", async e => {
+  e.preventDefault(); const n = parseInt(e.target.feitas.value, 10);
+  if (!(n >= 0)) { $("#massasErr").textContent = "Digite quantas massas fez hoje."; return; }
+  try { MS = await call("POST", "/admin/massas", { feitas: n }); renderMassas(); $("#dlgMassas").close(); toast(`Massas de hoje: restam ${MS.restam}`); } catch (x) { $("#massasErr").textContent = x.message; }
+});
+$("#mDesligar").addEventListener("click", async () => { try { MS = await call("POST", "/admin/massas", { desligar: true }); renderMassas(); $("#dlgMassas").close(); toast("O site parou de contar as massas hoje"); } catch (x) { toast(x.message); } });
+
+/* ---------- avaliações ---------- */
+const est5 = n => "★".repeat(n) + "☆".repeat(5 - n);
+async function loadAval(){
+  let a; try { a = await call("GET", "/admin/avaliacoes"); } catch (e) { return toast(e.message); }
+  $("#gForm").google.value = a.google || "";
+  $("#avResumo").innerHTML = a.total ? `<div class="avs"><div class="m">${String(a.media).replace(".", ",")}<small>${a.total} avaliaç${a.total > 1 ? "ões" : "ão"} pelo site</small></div>
+    <div class="dist">${[5,4,3,2,1].map(n => { const c = a.dist[n] || 0; return `<div><span>${n} ★</span><span><b style="width:${Math.round(c / a.total * 100)}%"></b></span><span>${c}</span></div>`; }).join("")}</div></div>`
+    : `<div class="empty">Ainda sem avaliações. Elas chegam pela página de acompanhamento do cliente, 1 hora depois da retirada, ou quando vocês tocam em <b>Pedir avaliação no WhatsApp</b> num pedido retirado.</div>`;
+  $("#avLista").innerHTML = a.avaliacoes.map(v => `<li><div class="h"><span><b>${esc(v.nome)}</b>${v.numero ? ` · nº ${v.numero}` : ""} · ${dia(v.em)} ${hora(v.em)}</span><span class="s" aria-label="${v.nota} de 5">${est5(v.nota)}</span></div>${v.comentario ? `<p>${esc(v.comentario)}</p>` : ""}</li>`).join("");
+}
+$("#gForm").addEventListener("submit", async e => { e.preventDefault(); $("#gErr").textContent = "";
+  try { const r = await call("POST", "/admin/avaliacoes/config", { google: e.target.google.value }); e.target.google.value = r.google; toast(r.google ? "Link do Google salvo" : "Link do Google removido"); } catch (x) { $("#gErr").textContent = x.message; } });
+
+/* ---------- telão do balcão ---------- */
+const SABORES = { "": "Girar todo o cardápio", mussarela: "Mussarela", calabresa: "Calabresa com Cebola", "tres-queijos": "Três Queijos", margherita: "Margherita", diavola: "Diavola", gorgonzola: "Gorgonzola & Cogumelo" };
+async function loadTelao(){ try { renderTelao(await call("GET", "/admin/telao")); } catch (e) { toast(e.message); } }
+function renderTelao(t){
+  const link = t.chave ? `${SITE}telao/?k=${t.chave}` : "";
+  $("#telaoCard").innerHTML = `<h2 class="t">Telão do balcão</h2>
+    <p class="preview">Para a TV da loja: colunas <b>Preparando</b> e <b>Pronto — pode retirar</b>, com o número do dia e o primeiro nome (sem telefone nem itens). Sem pedidos, mostra a pizza do dia e o cardápio girando. O som de “pronto” liga com um clique na TV.</p>
+    ${link ? `<div class="linkbox"><input class="in" id="tLink" readonly value="${esc(link)}" aria-label="Link do telão"><button class="btn b-line" type="button" id="tCopy">Copiar</button><a class="btn b-wine" href="${esc(link)}" target="_blank" rel="noopener">Abrir</a></div>
+      <p class="note">Abra este link no navegador da TV e toque em <b>Tela cheia</b>. Não compartilhe: quem tem o link vê os primeiros nomes. Se vazar, troque a chave (o link antigo para de funcionar).</p>
+      <label class="preview" style="display:grid;gap:6px;margin:14px 0">Pizza do dia (aparece primeiro quando não há pedidos)<select class="in" id="tDest" style="height:48px;border-radius:8px;border:1px solid var(--line-2);padding:0 12px;background:#fff">${Object.entries(SABORES).map(([k, v]) => `<option value="${k}" ${k === t.destaque ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+      <div class="acts"><button class="btn b-line" type="button" data-tl="nova">Trocar a chave</button><button class="btn b-ghost" type="button" data-tl="off">Desligar o telão</button></div>`
+    : `<div class="acts" style="margin-top:12px"><button class="btn b-wine" type="button" data-tl="nova">Ligar o telão (criar link)</button></div>`}`;
+}
+$("#telaoCard").addEventListener("click", async e => {
+  if (e.target.closest("#tCopy")) { try { await navigator.clipboard.writeText($("#tLink").value); toast("Link copiado"); } catch (x) { $("#tLink").select(); } return; }
+  const b = e.target.closest("[data-tl]"); if (!b) return;
+  if (b.dataset.tl === "nova" && $("#tLink") && !confirm("Trocar a chave? O telão com o link antigo para de funcionar.")) return;
+  if (b.dataset.tl === "off" && !confirm("Desligar o telão?")) return;
+  try { renderTelao(await call("POST", "/admin/telao", b.dataset.tl === "nova" ? { novaChave: true } : { desligar: true })); toast(b.dataset.tl === "nova" ? "Link do telão pronto" : "Telão desligado"); } catch (x) { toast(x.message); }
+});
+$("#telaoCard").addEventListener("change", async e => { if (e.target.id !== "tDest") return; try { renderTelao(await call("POST", "/admin/telao", { destaque: e.target.value })); toast("Pizza do dia salva"); } catch (x) { toast(x.message); } });
 
 /* ---------- estoque ---------- */
 let STK = { itens: [], unidades: [], categorias: [] }, stkFiltro = "todos", movItem = null;
@@ -626,12 +792,12 @@ function openShop(){
 $("#shopCopy").addEventListener("click", async () => { try { await navigator.clipboard.writeText($("#shopTxt").textContent); toast("Lista copiada"); } catch (x) { toast("Não deu para copiar. Selecione o texto e copie."); } });
 
 /* ---------- abas, entrar e sair ---------- */
-function tab(t){ $$(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t)); ["pedidos","selos","clientes","estoque"].forEach(x => $("#t-"+x).hidden = x !== t); if (t === "clientes") loadRank(); if (t === "estoque") loadStock(); if (t === "pedidos") loadOrders(true); }
+function tab(t){ $$(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t)); ["pedidos","selos","clientes","estoque","avaliacoes","telao"].forEach(x => $("#t-"+x).hidden = x !== t); if (t === "clientes") loadRank(); if (t === "avaliacoes") loadAval(); if (t === "telao") loadTelao(); if (t === "estoque") loadStock(); if (t === "pedidos") loadOrders(true); }
 $$(".tabs button").forEach(b => b.addEventListener("click", () => tab(b.dataset.tab)));
 let timer = null;
 function start(){
   $("#login").hidden = true; $("#app").hidden = false; $("#demoBar").hidden = !DEMO;
-  loadOrders(); loadStock(true); loadLoja(); clearInterval(timer); timer = setInterval(() => { if (!document.hidden) loadOrders(true); }, DEMO ? 5000 : 20000);
+  loadOrders(); loadStock(true); loadLoja(); loadMassas(); clearInterval(timer); timer = setInterval(() => { if (!document.hidden) { loadOrders(true); loadMassas(); } }, DEMO ? 5000 : 15000);
 }
 function logout(){ sessionStorage.removeItem("balcao-painel"); localStorage.removeItem("balcao-painel"); clearInterval(timer); $("#app").hidden = true; $("#login").hidden = false; }
 $("#logout").addEventListener("click", () => { if (DEMO) { location.href = location.pathname; return; } logout(); });
@@ -657,7 +823,7 @@ function demo(method, path, body){
     const P = { margherita:["Margherita",4790], mussarela:["Mussarela",4490], calabresa:["Calabresa com Cebola",4490], diavola:["Diavola",4990], gorgonzola:["Gorgonzola & Cogumelo",4990], "tres-queijos":["Três Queijos",4490] };
     const ago = m => new Date(Date.now() - m * 60000).toISOString(); let n = 0;
     const mk = (nome, tel, its, st, min, extra = {}) => { const itens = its.map(([id,q,obs]) => ({ id, nome:P[id][0], qtd:q, centavos:P[id][1], obs:obs||"" }));
-      return { id:`B1411-19${String(30+n).padStart(2,"0")}-D${String(++n).padStart(3,"0")}`, nome, tel, fid:!!tel, itens, total:itens.reduce((s,i)=>s+i.qtd*i.centavos,0), retirada:extra.ret||"o quanto antes", pagamento:extra.pag||"Pix", obs:extra.obs||"", status:st, criado_em:ago(min) }; };
+      return { numero: n + 1, token: "demo", id:`B1411-19${String(30+n).padStart(2,"0")}-D${String(++n).padStart(3,"0")}`, nome, tel, fid:!!tel, itens, total:itens.reduce((s,i)=>s+i.qtd*i.centavos,0), retirada:extra.ret||"o quanto antes", pagamento:extra.pag||"Pix", obs:extra.obs||"", status:st, criado_em:ago(min) }; };
     const pedidos = [
       mk("Ana", "41999910001", [["margherita",2,"sem manjericão"]], "novo", 2, { ret:"20:00" }),
       mk("Carlos", "41999910002", [["diavola",1],["calabresa",1]], "novo", 4, { pag:"Cartão" }),
@@ -686,9 +852,10 @@ function demo(method, path, body){
   const u = new URL("https://x" + path), p = u.pathname;
   const out = o => Promise.resolve(JSON.parse(JSON.stringify(o)));
   if (p === "/admin/pedidos") { const f = u.searchParams.get("status");
-    let l = f === "abertos" ? D.pedidos.filter(x => ["novo","preparo","pronto"].includes(x.status)) : D.pedidos.slice();
+    let l = f === "abertos" ? D.pedidos.filter(x => ABERTOS.includes(x.status)) : D.pedidos.slice();
     l.sort((a,b) => f === "abertos" ? a.criado_em.localeCompare(b.criado_em) : b.criado_em.localeCompare(a.criado_em)); return out({ pedidos:l }); }
   if (p === "/admin/pedido/status") { const o = D.pedidos.find(x => x.id === body.id); const antes = o.status; o.status = body.status; let selo = null;
+    if (body.status === "forno" && antes !== "forno") o.forno_em = new Date().toISOString();
     if (o.fid && o.tel) { if (body.status === "retirado" && !D.selos.some(s => s.pedido_id === o.id)) { D.add(o.tel, 1, "pedido retirado", o.id, 0); selo = "+1"; }
       else if (antes === "retirado" && body.status !== "retirado") { D.selos = D.selos.filter(s => s.pedido_id !== o.id); selo = "removido"; } }
     let estoque = null; const r3 = n => Math.round(n * 1000) / 1000, now = new Date().toISOString();
@@ -711,6 +878,16 @@ function demo(method, path, body){
       D.loja = body.fechado ? { fechado: true, ate: body.ate || null, motivo: String(body.motivo || "").trim().slice(0, 140) } : { fechado: false, ate: null, motivo: "" }; }
     return out({ ...D.loja, hoje: hojeSP() });
   }
+  if (p === "/admin/massas") { D.massas = D.massas || { ativo: true, feitas: 40, balcao: 2 };
+    if (method === "POST") { if (body.desligar) D.massas = { ativo: false, feitas: null, balcao: 0 }; else if (body.feitas !== undefined) D.massas = { ativo: true, feitas: body.feitas, balcao: D.massas.balcao || 0 }; else D.massas.balcao = Math.max(0, D.massas.balcao + body.balcao); }
+    const site = D.pedidos.filter(x => x.status !== "cancelado").reduce((s, x) => s + x.itens.reduce((a, i) => a + i.qtd, 0), 0);
+    return out({ ...D.massas, site, restam: D.massas.ativo ? Math.max(0, D.massas.feitas - D.massas.balcao - site) : null, estoque: [] }); }
+  if (p === "/admin/telao") { D.telao = D.telao || { chave: "demo-chave-do-telao-123456", destaque: "margherita" }; if (method === "POST") { if (body.novaChave) D.telao.chave = "demo-" + Math.random().toString(36).slice(2, 20); if (body.desligar) D.telao.chave = null; if (body.destaque !== undefined) D.telao.destaque = body.destaque; } return out(D.telao); }
+  if (p === "/admin/avaliacoes") return out({ total: 3, media: 4.3, dist: { 5: 2, 3: 1 }, google: D.google || "", avaliacoes: [
+    { nome: "Marina", numero: 5, nota: 5, comentario: null, em: new Date(Date.now() - 36e5).toISOString() },
+    { nome: "Paulo", numero: 3, nota: 3, comentario: "Estava ótima, mas demorou um pouco no horário marcado.", em: new Date(Date.now() - 864e5).toISOString() },
+    { nome: "Lia", numero: 2, nota: 5, comentario: null, em: new Date(Date.now() - 1728e5).toISOString() }] });
+  if (p === "/admin/avaliacoes/config") { D.google = body.google || ""; return out({ ok: true, google: D.google }); }
   const pub = i => ({ ...i, acabando: i.quantidade <= i.minimo });
   if (p === "/admin/fichas") { const nomes = { _todas:"Em toda pizza" }; Object.entries(D.P).forEach(([k, v]) => nomes[k] = v[0]); const fichas = {};
     Object.entries(D.ficha).forEach(([sb, l]) => fichas[sb] = l.map(([id, q]) => { const i = D.itens.find(x => x.id === id); return i && { sabor:sb, item_id:id, qtd:q, nome:i.nome, unidade:i.unidade }; }).filter(Boolean));

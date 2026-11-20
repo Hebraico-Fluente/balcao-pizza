@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1E1611">
+<title>Telão · Balcão</title>
+<link rel="icon" type="image/png" href="../img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1E1611;--ink-2:#2B1A12;--cream:#F3E6D6;--muted:#B5A497;--wine:#6C1603;--wine-2:#86240E;--gold:#F2B33D;--green:#3FA466;
+--serif:"Instrument Serif",Georgia,serif;--sans:"Inter",system-ui,sans-serif;--ease:cubic-bezier(.23,1,.32,1)}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ink);color:var(--cream);font:400 1.6vh/1.4 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+body.idle{cursor:none}
+[hidden]{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-rows:auto 1fr auto;height:100vh;padding:3.2vh 3.4vw 2.6vh;gap:3vh}
+.top{display:flex;align-items:center;gap:2.4vw}
+.top img{height:6vh;width:auto}
+.top .clock{margin-left:auto;font:400 6vh/1 var(--serif)}
+.massas{display:inline-block;padding:1vh 1.6vw;border-radius:999px;background:rgba(243,230,214,.08);font-size:2.4vh}
+.massas b{color:var(--gold);font-weight:600}
+.massas.out{background:var(--wine)}
+.cols{display:grid;grid-template-columns:1fr 1.25fr;gap:2.4vw;min-height:0}
+.col{display:flex;flex-direction:column;min-height:0;border-radius:2vh;padding:3vh 2vw}
+.col.prep{background:var(--ink-2)}
+.col.ready{background:var(--wine)}
+.col h2{margin:0 0 2.6vh;font:600 2.6vh/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:1vw}
+.col.ready h2{color:#fff}
+.col h2 i{width:1.4vh;height:1.4vh;border-radius:50%;background:var(--gold)}
+.col.ready h2 i{background:#7BD99A}
+.grid{display:grid;gap:1.6vh;align-content:start;overflow:hidden}
+.prep .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ready .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.t{display:flex;align-items:center;gap:1.4vw;padding:1.8vh 1.4vw;border-radius:1.4vh;background:rgba(243,230,214,.06);min-width:0}
+.t .n{font:400 7vh/1 var(--serif);min-width:2.2ch;text-align:center}
+.t .nm{font-size:3.2vh;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t small{display:block;font-size:1.9vh;color:var(--muted);font-weight:400}
+.t small.fire{color:#F08A4B}
+.ready .t{background:rgba(255,255,255,.1)}
+.ready .t .n{font-size:10vh}
+.ready .t .nm{font-size:4vh;color:#fff}
+.ready .t.new{animation:chama 1.2s var(--ease) 4;background:#fff;color:var(--wine)}
+.ready .t.new .nm{color:var(--wine)}
+@keyframes chama{0%{transform:scale(1)}30%{transform:scale(1.06)}60%{transform:scale(1)}}
+.empty{margin:auto 0;text-align:center;color:var(--muted);font-size:2.6vh}
+.ready .empty{color:rgba(255,255,255,.7)}
+/* vitrine quando não há pedidos */
+.show{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:4vw;min-height:0}
+.show .pz{position:relative;justify-self:center;width:min(70vh,42vw);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff 0 60%,#E9E0D3 61%);display:grid;place-items:center;box-shadow:0 4vh 10vh -4vh rgba(0,0,0,.7)}
+.show .pz img{width:84%;aspect-ratio:1;object-fit:cover;border-radius:50%;animation:gira 60s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+.show .eb{font-size:2.4vh;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 2vh}
+.show h1{font:400 13vh/.95 var(--serif);margin:0 0 3vh;color:#fff;text-wrap:balance}
+.show .pr{font-size:4vh;color:var(--cream)}
+.show p.call{font-size:2.6vh;color:var(--muted);margin:5vh 0 0;max-width:30em}
+.fade{animation:entra .9s var(--ease)}
+@keyframes entra{from{opacity:0;transform:translateY(2vh)}}
+.bot{display:flex;align-items:center;gap:1.4vw;font-size:1.9vh;color:var(--muted)}
+.bot .live{display:inline-flex;align-items:center;gap:.6vw}
+.bot .live i{width:1vh;height:1vh;border-radius:50%;background:var(--green)}
+.bot .live.off i{background:#E06A4B}
+.bot button{margin-left:auto;font:500 1.9vh var(--sans);color:var(--cream);background:rgba(243,230,214,.1);border:0;border-radius:999px;padding:1vh 1.6vw;cursor:pointer}
+.bot button+button{margin-left:0}
+.bot button[aria-pressed=true]{background:var(--gold);color:var(--ink)}
+.msg{position:fixed;inset:0;display:grid;place-items:center;text-align:center;padding:6vw;background:var(--ink)}
+.msg h1{font:400 7vh/1.05 var(--serif);margin:0 0 2vh}
+.msg p{font-size:2.6vh;color:var(--muted);margin:0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app" hidden>
+  <div class="top"><img src="../img/logo-cream.png" alt="Balcão Pizza Napoletana" width="810" height="284"><span class="massas" id="massas" hidden></span><span class="clock num" id="clock"></span></div>
+  <div class="cols" id="cols">
+    <section class="col prep" aria-labelledby="h1p"><h2 id="h1p"><i></i>Preparando</h2><div class="grid" id="prep"></div></section>
+    <section class="col ready" aria-labelledby="h1r" aria-live="polite"><h2 id="h1r"><i></i>Pronto — pode retirar</h2><div class="grid" id="ready"></div></section>
+  </div>
+  <div class="show" id="show" hidden></div>
+  <div class="bot"><span class="live" id="live"><i></i><span id="liveTxt">ao vivo</span></span><span>Faça o seu pedido em balcaopizza.com.br</span><button type="button" id="som" aria-pressed="false">Ativar som</button><button type="button" id="cheia">Tela cheia</button></div>
+</div>
+<div class="msg" id="erro" hidden><div><h1 id="erroT">Telão da Balcão</h1><p id="erroP"></p></div></div>
+
+<script>
+/* Endereço do servidor do painel (preenchido pelo scripts/montar-site.sh). */
+const API_PADRAO = "";
+const POLL_MS = 5000, GIRO_MS = 9000;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const brl = c => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const API = API_PADRAO.replace(/\/$/, ""), K = new URLSearchParams(location.search).get("k") || "";
+const ET = { novo: "Recebido", preparo: "Massa aberta", forno: "No forno" };
+let D = null, vistos = null, novos = new Map(), giro = 0, giroT = null, ac = null, som = false;
+
+function erro(t, p){ $("#app").hidden = true; $("#erro").hidden = false; $("#erroT").textContent = t; $("#erroP").textContent = p; }
+async function carregar(){
+  if (!API) return erro("Telão da Balcão", "O servidor do painel não está ligado neste site.");
+  if (!K) return erro("Falta a chave do telão", "Abra o link do telão que aparece no painel, na aba Telão.");
+  try {
+    const r = await fetch(API + "/telao?k=" + encodeURIComponent(K), { cache: "no-store" });
+    if (r.status === 401) return erro("Chave do telão inválida", "A chave mudou ou o link está incompleto. Copie o link novo no painel, na aba Telão.");
+    if (r.status === 403) return erro("Telão desligado", "Ligue o telão no painel, na aba Telão.");
+    if (!r.ok) throw 0;
+    D = await r.json(); $("#erro").hidden = true; $("#app").hidden = false; live(true); desenhar();
+  } catch (e) { live(false); }
+  setTimeout(carregar, document.hidden ? POLL_MS * 6 : POLL_MS);
+}
+function live(on){ $("#live").classList.toggle("off", !on); $("#liveTxt").textContent = on ? "ao vivo" : "sem conexão · tentando de novo"; }
+
+function desenhar(){
+  const ids = new Set(D.prontos.map(p => p.numero)), agora = Date.now();
+  if (vistos) { let tocou = false; for (const n of ids) if (!vistos.has(n)) { novos.set(n, agora); tocou = true; } if (tocou) plim(); }
+  vistos = ids; for (const [n, t] of novos) if (agora - t > 20000 || !ids.has(n)) novos.delete(n);
+  const m = D.massas;
+  $("#massas").hidden = !m; if (m) { $("#massas").classList.toggle("out", m.restam === 0); $("#massas").innerHTML = m.restam ? `Restam <b class="num">${m.restam}</b> massa${m.restam > 1 ? "s" : ""} hoje` : "As massas de hoje acabaram"; }
+  const vazio = !D.preparando.length && !D.prontos.length;
+  $("#cols").hidden = vazio; $("#show").hidden = !vazio;
+  if (vazio) { if (!giroT) vitrine(); return; }
+  clearTimeout(giroT); giroT = null;
+  const n = x => String(x).padStart(2, "0");
+  $("#prep").innerHTML = D.preparando.length ? D.preparando.slice(0, 12).map(p => `<div class="t"><span class="n num">${n(p.numero)}</span><span class="nm">${esc(p.nome)}<small class="${p.etapa === "forno" ? "fire" : ""}">${ET[p.etapa] || ""}</small></span></div>`).join("")
+    + (D.preparando.length > 12 ? `<p class="empty">+ ${D.preparando.length - 12} pedidos</p>` : "") : `<p class="empty">Nenhuma pizza na bancada agora.</p>`;
+  $("#ready").innerHTML = D.prontos.length ? D.prontos.slice(0, 8).map(p => `<div class="t ${novos.has(p.numero) ? "new" : ""}"><span class="n num">${n(p.numero)}</span><span class="nm">${esc(p.nome)}</span></div>`).join("") : `<p class="empty">Assim que sair do forno, o seu número aparece aqui.</p>`;
+}
+/* sem pedidos: a pizza do dia e o cardápio girando */
+function vitrine(){
+  const l = D.cardapio, dest = D.destaque, ordem = dest ? [dest, ...l.map(x => x.id).filter(x => x !== dest)] : l.map(x => x.id);
+  const id = ordem[giro++ % ordem.length], p = l.find(x => x.id === id);
+  $("#show").innerHTML = `<div class="pz fade"><img src="../img/lg/${p.id}.jpg" alt=""></div><div class="fade"><p class="eb">${id === dest ? "Pizza do dia" : "No cardápio"}</p><h1>${esc(p.nome)}</h1><span class="pr num">${brl(p.centavos)} · 30 cm</span><p class="call">Massa de 48 horas, aberta à mão e assada em 90 segundos. Peça pelo site ou pelo WhatsApp e acompanhe aqui.</p></div>`;
+  giroT = setTimeout(() => { giroT = null; if (D && !D.preparando.length && !D.prontos.length) vitrine(); }, GIRO_MS);
+}
+/* som: só depois de um clique (regra dos navegadores) */
+function plim(){ if (!som || !ac) return; [[784, 0], [1047, .22]].forEach(([f, t]) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = "sine"; o.frequency.value = f;
+  g.gain.setValueAtTime(.0001, ac.currentTime + t); g.gain.exponentialRampToValueAtTime(.35, ac.currentTime + t + .03); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + t + .9);
+  o.connect(g).connect(ac.destination); o.start(ac.currentTime + t); o.stop(ac.currentTime + t + 1); }); }
+$("#som").addEventListener("click", () => { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch (e) {} som = !som; $("#som").setAttribute("aria-pressed", som); $("#som").textContent = som ? "Som ligado" : "Ativar som"; if (som) plim(); });
+$("#cheia").addEventListener("click", () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {}); });
+const relogio = () => $("#clock").textContent = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+relogio(); setInterval(relogio, 10000);
+let idleT; addEventListener("mousemove", () => { document.body.classList.remove("idle"); clearTimeout(idleT); idleT = setTimeout(() => document.body.classList.add("idle"), 4000); });
+carregar();
+</script>
+</body>
+</html>

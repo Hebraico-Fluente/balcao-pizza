@@ -80,3 +80,41 @@ CREATE TABLE IF NOT EXISTS baixas (
   pedido_id TEXT PRIMARY KEY,
   criado_em TEXT NOT NULL
 );
+
+-- ===== Acompanhamento ao vivo, telão, massas do dia e avaliações =====
+-- Tabelas novas (em vez de colunas novas em "pedidos"): o deploy reaplica este arquivo inteiro
+-- a cada publicação, e CREATE TABLE IF NOT EXISTS pode rodar quantas vezes for preciso.
+
+-- Um registro por pedido feito pelo site: o link secreto do cliente e a hora de cada etapa.
+CREATE TABLE IF NOT EXISTS acompanhamento (
+  pedido_id    TEXT PRIMARY KEY,       -- pedidos.id
+  token        TEXT NOT NULL UNIQUE,   -- aleatório (128 bits ou mais): o link do cliente é /acompanhar/?t=TOKEN
+  numero       INTEGER NOT NULL,       -- número curto do dia (1, 2, 3...) para o telão e o balcão
+  dia          TEXT NOT NULL,          -- AAAA-MM-DD no fuso America/Sao_Paulo
+  massas       INTEGER NOT NULL DEFAULT 0, -- quantas massas o pedido usa (meia a meia = 1)
+  criado_em    TEXT NOT NULL,
+  massa_em     TEXT,                   -- etapa "Massa aberta" (status preparo)
+  forno_em     TEXT,                   -- etapa "No forno"
+  pronto_em    TEXT,
+  retirado_em  TEXT,
+  cancelado_em TEXT
+);
+CREATE INDEX IF NOT EXISTS acompanhamento_dia ON acompanhamento (dia, numero);
+
+-- "Como estava a pizza?" — uma avaliação por pedido (o cliente pode corrigir a nota).
+CREATE TABLE IF NOT EXISTS avaliacoes (
+  pedido_id     TEXT PRIMARY KEY,
+  nota          INTEGER NOT NULL,      -- 1 a 5
+  comentario    TEXT,                  -- comentário privado (só a equipe vê no painel)
+  criado_em     TEXT NOT NULL,
+  atualizado_em TEXT
+);
+CREATE INDEX IF NOT EXISTS avaliacoes_criado ON avaliacoes (criado_em);
+
+-- Limite de acessos por aparelho nas rotas públicas novas (janelas curtas; linhas velhas são apagadas).
+CREATE TABLE IF NOT EXISTS limites (
+  chave TEXT PRIMARY KEY,              -- rota:ip(hash):janela
+  n     INTEGER NOT NULL,
+  ate   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS limites_ate ON limites (ate);

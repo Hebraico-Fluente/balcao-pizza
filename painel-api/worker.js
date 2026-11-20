@@ -7,7 +7,12 @@
  *   GET  /selos?tel=41999999999  o cliente consulta o próprio cartão: devolve SÓ a quantidade de selos
  *                                (nada de nome ou pedidos), só para o site da Balcão e no máximo
  *                                MAX_CONSULTAS_POR_IP_HORA consultas por aparelho, para ninguém varrer números.
- *   GET  /status                 a loja está fechada pelo painel? {"fechado", "ate", "motivo"}
+ *   GET  /status                 a loja está fechada pelo painel? {"fechado", "ate", "motivo", "massas"}
+ *                                massas = {"restam"} quando a loja informou as massas de hoje (senão null)
+ *   GET  /acompanhar?t=TOKEN     acompanhamento do PRÓPRIO pedido (link secreto): etapa, número do dia,
+ *                                primeiro nome e itens. Nada de telefone, total ou outros pedidos.
+ *   POST /avaliacao              {"t","nota":1..5,"comentario"?}  só depois que o pedido foi retirado
+ *   GET  /telao?k=CHAVE          telão do balcão: número do dia + primeiro nome (sem telefone nem itens)
  *
  * Painel (exige a senha no cabeçalho  Authorization: Bearer SENHA):
  *   GET  /admin/pedidos?status=abertos|hoje|todos
@@ -25,6 +30,12 @@
  *   GET  /admin/estoque/historico?id=   últimos movimentos de um item
  *   GET  /admin/fichas                  ficha técnica de cada sabor (o que sai do estoque por pizza)
  *   POST /admin/ficha                   {"sabor", "linhas": [{"item_id", "qtd"}]}  troca a ficha do sabor
+ *   GET  /admin/massas                  massas de hoje (feitas, vendidas no site, no balcão, restam)
+ *   POST /admin/massas                  {"feitas"} | {"balcao": +1|-1} | {"desligar": true}
+ *   GET  /admin/telao                   chave e pizza do dia do telão
+ *   POST /admin/telao                   {"novaChave": true} | {"desligar": true} | {"destaque": "margherita"|""}
+ *   GET  /admin/avaliacoes              avaliações, média e link do Google
+ *   POST /admin/avaliacoes/config       {"google": "https://g.page/r/..."|""}
  *
  * Regras:
  *   - O selo entra SÓ quando a pizzaria marca o pedido como "retirado" (nunca no envio),
@@ -32,6 +43,9 @@
  *   - O total é recalculado aqui com a tabela PRECOS.
  *   - Baixa automática: ao marcar "retirado", sai do estoque a ficha de cada pizza (+ "Em toda pizza"),
  *     uma única vez por pedido. Desfazer a retirada ou cancelar devolve exatamente o que saiu.
+ *   - Etapas: novo (Recebido) → preparo (Massa aberta) → forno (No forno) → pronto → retirado | cancelado.
+ *   - Massas do dia: cada pizza usa 1 massa (meia a meia = 1). Com as massas de hoje informadas no painel,
+ *     o pedido que passar do que resta é recusado (409). Vira sozinho à meia-noite de São Paulo.
  *   - Dado pessoal guardado: nome e celular, só para o pedido e o cartão fidelidade.
  *
  * Configuração no painel da Cloudflare:
@@ -49,8 +63,15 @@ const PRECOS = {                       // centavos — MANTENHA IGUAL ao MENU do
   "diavola":      { nome: "Diavola",               centavos: 4990 },
   "gorgonzola":   { nome: "Gorgonzola & Cogumelo", centavos: 4990 },
 };
-const STATUS = ["novo", "preparo", "pronto", "retirado", "cancelado"];
+const STATUS = ["novo", "preparo", "forno", "pronto", "retirado", "cancelado"];
+const ABERTOS = ["novo", "preparo", "forno", "pronto"];
+const ETAPA_COL = { preparo: "massa_em", forno: "forno_em", pronto: "pronto_em", retirado: "retirado_em", cancelado: "cancelado_em" };
 const ID_RE = /^B\d{4}-\d{4}-[A-Z0-9]{4}$/;
+const TOKEN_RE = /^[A-Za-z0-9_-]{22,64}$/;   // 22 caracteres base64url = 128 bits
+const FORNO_SEG = 90;                        // a napoletana assa ~90 s a ~480 °C
+const AVALIAR_DEPOIS_MIN = 60;               // a pergunta "Como estava a pizza?" aparece 1 h depois da retirada
+const AVALIAR_ATE_DIAS = 30;
+const MAX_MASSAS = 999;
 const MAX_PEDIDOS_POR_IP_HORA = 12;
 const MAX_CONSULTAS_POR_IP_HORA = 10;
 const UNIDADES = ["kg", "g", "L", "ml", "un", "cx", "pct", "lata", "maço", "botijão"];
@@ -105,6 +126,33 @@ async function hashIp(req) {
   return [...new Uint8Array(d)].slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+/** Texto aleatório base64url (crypto.getRandomValues). 16 bytes = 128 bits. */
+export function novoToken(bytes = 16) {
+  const b = crypto.getRandomValues(new Uint8Array(bytes));
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+const primeiroNome = n => { const p = String(n || "").trim().split(/\s+/)[0] || ""; return p.slice(0, 18); };
+const mudou = r => !!(r && (r.meta ? r.meta.changes : r.changes));
+
+/** Limite por aparelho em janelas fixas. Devolve true se passou do limite. "so" = só conferir, sem contar. */
+async function limitar(env, req, rota, max, seg, so = false) {
+  const ip = await hashIp(req), j = Math.floor(Date.now() / 1000 / seg), chave = `${rota}:${ip}:${j}`;
+  if (so) { const r = await env.DB.prepare("SELECT n FROM limites WHERE chave = ?").bind(chave).first(); return !!r && r.n >= max; }
+  const r = await env.DB.prepare("INSERT INTO limites (chave, n, ate) VALUES (?, 1, ?) ON CONFLICT(chave) DO UPDATE SET n = n + 1 RETURNING n")
+    .bind(chave, new Date((j + 1) * seg * 1000).toISOString()).first();
+  if (Math.random() < 0.03) await env.DB.prepare("DELETE FROM limites WHERE ate < ?").bind(agora()).run();
+  return (r ? Number(r.n) : 1) > max;
+}
+
+async function lerConfig(env, chave) {
+  const r = await env.DB.prepare("SELECT valor FROM config WHERE chave = ?").bind(chave).first();
+  try { return r ? JSON.parse(r.valor) || {} : {}; } catch (e) { return {}; }
+}
+async function salvarConfig(env, chave, v) {
+  await env.DB.prepare("INSERT INTO config (chave, valor, atualizado_em) VALUES (?, ?, ?) ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor, atualizado_em = excluded.atualizado_em")
+    .bind(chave, JSON.stringify(v), agora()).run();
+}
+
 async function selosDe(env, tel) {
   const r = await env.DB.prepare("SELECT COALESCE(SUM(delta),0) AS s FROM selos WHERE tel = ?").bind(tel).first();
   return Number(r ? r.s : 0);
@@ -122,13 +170,20 @@ export function montarPedido(b) {
     const p = PRECOS[i && i.id], q = Number(i && i.qtd);
     if (!p) throw new Error("sabor desconhecido");
     if (!Number.isInteger(q) || q < 1 || q > 20) throw new Error("quantidade inválida");
-    return { id: i.id, nome: p.nome, qtd: q, centavos: p.centavos, obs: String(i.obs || "").slice(0, 120) };
+    const obs = String(i.obs || "").slice(0, 120);
+    if (i.meia && i.meia !== i.id) {                 // meia a meia: 1 massa, cobra o sabor mais caro das duas metades
+      const m = PRECOS[i.meia]; if (!m) throw new Error("sabor desconhecido");
+      return { id: i.id, meia: i.meia, nome: `½ ${p.nome} + ½ ${m.nome}`, qtd: q, centavos: Math.max(p.centavos, m.centavos), obs };
+    }
+    return { id: i.id, nome: p.nome, qtd: q, centavos: p.centavos, obs };
   });
   const fid = !!b.fid;
   const tel = normTel(b.tel);
   if (fid && !tel) throw new Error("celular inválido");
+  const token = TOKEN_RE.test(String(b.token || "")) ? String(b.token) : null;   // o site gera com crypto.getRandomValues
   return {
-    id, nome, itens, fid, tel: tel || null,
+    id, nome, itens, fid, tel: tel || null, token,
+    massas: massasDe(itens),
     total: itens.reduce((s, i) => s + i.qtd * i.centavos, 0),
     retirada: String(b.retirada || "").slice(0, 40),
     pagamento: String(b.pagamento || "").slice(0, 40),
@@ -144,6 +199,19 @@ async function lerLoja(env) {
   let v = {}; try { v = r ? JSON.parse(r.valor) : {}; } catch (e) {}
   const fechado = !!v.fechado && (!v.ate || hojeSP() <= v.ate);   // "até" vence sozinho: no dia seguinte a loja reabre
   return { fechado, ate: fechado ? v.ate || null : null, motivo: fechado ? String(v.motivo || "") : "" };
+}
+
+/* ---------- massas do dia (longa fermentação = quantidade limitada) ---------- */
+/** Cada pizza usa uma bola de massa; meia a meia continua sendo UMA pizza, então 1 massa. */
+export const massasDe = itens => itens.reduce((s, i) => s + Number(i.qtd || 0), 0);
+async function lerMassas(env) {
+  const hoje = hojeSP(), v = await lerConfig(env, "massas");
+  const r = await env.DB.prepare(`SELECT COALESCE(SUM(a.massas),0) AS n FROM acompanhamento a JOIN pedidos p ON p.id = a.pedido_id
+    WHERE a.dia = ? AND p.status != 'cancelado'`).bind(hoje).first();
+  const site = Number(r ? r.n : 0);
+  if (v.dia !== hoje || !Number.isInteger(v.feitas)) return { ativo: false, dia: hoje, feitas: null, balcao: 0, site, restam: null };  // virou o dia: zera sozinho
+  const balcao = Number(v.balcao) || 0;
+  return { ativo: true, dia: hoje, feitas: v.feitas, balcao, site, restam: Math.max(0, v.feitas - balcao - site) };
 }
 
 /* ---------- estoque ---------- */
@@ -169,8 +237,13 @@ async function darBaixa(env, p) {
   if (!(r.meta ? r.meta.changes : r.changes)) return [];                 // este pedido já deu baixa
   const { results: ficha } = await env.DB.prepare("SELECT sabor, item_id, qtd FROM ficha").all();
   const uso = new Map();
-  for (const it of JSON.parse(p.itens || "[]")) for (const f of ficha)
-    if (f.sabor === it.id || f.sabor === TODAS) uso.set(f.item_id, (uso.get(f.item_id) || 0) + f.qtd * it.qtd);
+  for (const it of JSON.parse(p.itens || "[]")) {
+    const partes = it.meia ? [[it.id, 0.5], [it.meia, 0.5]] : [[it.id, 1]];       // meia a meia: metade da ficha de cada sabor
+    for (const f of ficha) {
+      const peso = f.sabor === TODAS ? 1 : partes.reduce((s, [sb, w]) => s + (sb === f.sabor ? w : 0), 0);
+      if (peso) uso.set(f.item_id, (uso.get(f.item_id) || 0) + f.qtd * peso * it.qtd);
+    }
+  }
   const feito = [];
   for (const [id, q] of uso) {
     const item = await itemPorId(env, id); if (!item) continue;
@@ -197,6 +270,37 @@ async function devolverBaixa(env, p) {
   return true;
 }
 
+/* ---------- acompanhamento do cliente ---------- */
+async function acompPorToken(env, t) {
+  return env.DB.prepare(`SELECT a.*, p.nome, p.itens, p.status, p.retirada FROM acompanhamento a JOIN pedidos p ON p.id = a.pedido_id
+    WHERE a.token = ?`).bind(t).first();
+}
+/** O que o cliente vê: só o próprio pedido, primeiro nome e itens (sem telefone, total, código ou observações). */
+async function publicoAcomp(env, a) {
+  const itens = JSON.parse(a.itens || "[]").map(i => ({ sabor: i.id, nome: i.nome, qtd: i.qtd }));
+  const ret = a.status === "retirado" && a.retirado_em;
+  const av = ret ? await env.DB.prepare("SELECT nota, comentario FROM avaliacoes WHERE pedido_id = ?").bind(a.pedido_id).first() : null;
+  return {
+    numero: a.numero, nome: primeiroNome(a.nome), itens, retirada: a.retirada || "", etapa: a.status,
+    etapas: { recebido: a.criado_em, massa: a.massa_em, forno: a.forno_em, pronto: a.pronto_em, retirado: a.retirado_em, cancelado: a.cancelado_em },
+    fornoSeg: FORNO_SEG, agora: agora(),
+    avaliacao: ret ? {
+      aberta: Date.now() - Date.parse(a.retirado_em) <= AVALIAR_ATE_DIAS * 86400e3,
+      desde: new Date(Date.parse(a.retirado_em) + AVALIAR_DEPOIS_MIN * 60e3).toISOString(),
+      nota: av ? av.nota : null, comentou: !!(av && av.comentario),
+      google: (await lerConfig(env, "avaliacao")).google || null,
+    } : null,
+  };
+}
+/** Link de avaliação do Google: só https e só endereços do Google (g.page, maps.app.goo.gl, google.com...). */
+export function linkGoogle(v) {
+  const s = String(v || "").trim(); if (!s) return "";
+  let u; try { u = new URL(s); } catch (e) { return null; }
+  const h = u.hostname.toLowerCase();
+  const ok = u.protocol === "https:" && (["g.page", "goo.gl", "maps.app.goo.gl", "g.co"].includes(h) || /(^|\.)google\.com(\.br)?$/.test(h));
+  return ok && s.length <= 500 ? u.toString() : null;
+}
+
 export async function handle(req, env) {
   const url = new URL(req.url), path = url.pathname;
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(req, true) });
@@ -211,10 +315,77 @@ export async function handle(req, env) {
     const n = await env.DB.prepare("SELECT COUNT(*) AS n FROM pedidos WHERE ip = ? AND criado_em > ?")
       .bind(ip, new Date(Date.now() - 3600e3).toISOString()).first();
     if (n && n.n >= MAX_PEDIDOS_POR_IP_HORA) return json(req, { error: "muitos pedidos" }, 429);
-    await env.DB.prepare(`INSERT OR IGNORE INTO pedidos (id,nome,tel,fid,itens,total,retirada,pagamento,obs,status,ip,criado_em)
+    const existe = await env.DB.prepare("SELECT a.token, a.numero FROM pedidos p LEFT JOIN acompanhamento a ON a.pedido_id = p.id WHERE p.id = ?").bind(p.id).first();
+    if (existe) {                                       // reenvio do mesmo pedido: só devolve o link para quem já tem o mesmo token
+      const meu = existe.token && p.token && await igual(existe.token, p.token);
+      return json(req, { ok: true, id: p.id, ...(meu ? { token: existe.token, numero: existe.numero } : {}) });
+    }
+    const m = await lerMassas(env);
+    if (m.ativo && p.massas > m.restam)
+      return json(req, { error: m.restam ? `Restam só ${m.restam} massa${m.restam > 1 ? "s" : ""} hoje.` : "As massas de hoje acabaram.", massas: { restam: m.restam } }, 409);
+    const criado = agora();
+    const r = await env.DB.prepare(`INSERT OR IGNORE INTO pedidos (id,nome,tel,fid,itens,total,retirada,pagamento,obs,status,ip,criado_em)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).bind(p.id, p.nome, p.tel, p.fid ? 1 : 0, JSON.stringify(p.itens), p.total,
-      p.retirada, p.pagamento, p.obs, "novo", ip, agora()).run();
-    return json(req, { ok: true, id: p.id });
+      p.retirada, p.pagamento, p.obs, "novo", ip, criado).run();
+    if (!mudou(r)) return json(req, { ok: true, id: p.id });
+    let token = p.token || novoToken(), numero = null;
+    for (let tent = 0; tent < 3 && numero === null; tent++) {
+      try {                                             // número do dia calculado no próprio INSERT (sem corrida entre dois pedidos)
+        await env.DB.prepare(`INSERT INTO acompanhamento (pedido_id, token, numero, dia, massas, criado_em)
+          SELECT ?, ?, COALESCE(MAX(numero), 0) + 1, ?, ?, ? FROM acompanhamento WHERE dia = ?`).bind(p.id, token, hojeSP(), p.massas, criado, hojeSP()).run();
+        numero = (await env.DB.prepare("SELECT numero FROM acompanhamento WHERE pedido_id = ?").bind(p.id).first()).numero;
+      } catch (e) { token = novoToken(); }               // token repetido (praticamente impossível): sorteia outro
+    }
+    return json(req, { ok: true, id: p.id, ...(numero !== null ? { token, numero } : {}) });
+  }
+
+  if (req.method === "GET" && path === "/acompanhar") {
+    if (!origens(req).includes(req.headers.get("Origin") || "")) return json(req, { error: "origem" }, 403);
+    if (await limitar(env, req, "acomp", 400, 600)) return json(req, { error: "muitas consultas" }, 429);
+    if (await limitar(env, req, "acomp-erro", 30, 600, true)) return json(req, { error: "muitas consultas" }, 429);
+    const t = String(url.searchParams.get("t") || "");
+    const a = TOKEN_RE.test(t) ? await acompPorToken(env, t) : null;
+    if (!a) { await limitar(env, req, "acomp-erro", 30, 600); return json(req, { error: "pedido não encontrado" }, 404); }
+    return json(req, await publicoAcomp(env, a));
+  }
+
+  if (req.method === "POST" && path === "/avaliacao") {
+    if (!origens(req).includes(req.headers.get("Origin") || "")) return json(req, { error: "origem" }, 403);
+    if (await limitar(env, req, "avaliar", 20, 600)) return json(req, { error: "muitas tentativas" }, 429);
+    const b = await req.json().catch(() => ({}));
+    const t = String(b.t || ""), nota = Number(b.nota);
+    const a = TOKEN_RE.test(t) ? await acompPorToken(env, t) : null;
+    if (!a) return json(req, { error: "pedido não encontrado" }, 404);
+    if (!Number.isInteger(nota) || nota < 1 || nota > 5) return json(req, { error: "nota" }, 400);
+    if (a.status !== "retirado" || !a.retirado_em) return json(req, { error: "A avaliação abre depois que você retirar a pizza." }, 409);
+    if (Date.now() - Date.parse(a.retirado_em) > AVALIAR_ATE_DIAS * 86400e3) return json(req, { error: "Este pedido já é antigo para avaliar." }, 409);
+    const comentario = String(b.comentario ?? "").replace(/[\u0000-\u0008\u000B-\u001F\u007F]/g, "").trim().slice(0, 600) || null;
+    const ja = await env.DB.prepare("SELECT comentario FROM avaliacoes WHERE pedido_id = ?").bind(a.pedido_id).first();
+    const com = b.comentario === undefined && ja ? ja.comentario : comentario;   // trocar só a nota não apaga o comentário
+    await env.DB.prepare(`INSERT INTO avaliacoes (pedido_id, nota, comentario, criado_em) VALUES (?,?,?,?)
+      ON CONFLICT(pedido_id) DO UPDATE SET nota = excluded.nota, comentario = excluded.comentario, atualizado_em = excluded.criado_em`)
+      .bind(a.pedido_id, nota, com, agora()).run();
+    return json(req, { ok: true, nota, google: (await lerConfig(env, "avaliacao")).google || null });
+  }
+
+  if (req.method === "GET" && path === "/telao") {
+    if (!origens(req).includes(req.headers.get("Origin") || "")) return json(req, { error: "origem" }, 403);
+    if (await limitar(env, req, "telao", 60, 60)) return json(req, { error: "muitas consultas" }, 429);
+    const cfg = await lerConfig(env, "telao"), k = String(url.searchParams.get("k") || "");
+    if (!cfg.chave) return json(req, { error: "O telão está desligado no painel." }, 403);
+    if (!k || !(await igual(k, cfg.chave))) return json(req, { error: "chave" }, 401);
+    const { results } = await env.DB.prepare(`SELECT a.numero, p.nome, p.status, a.pronto_em, a.forno_em FROM acompanhamento a JOIN pedidos p ON p.id = a.pedido_id
+      WHERE a.dia = ? AND p.status IN ('novo','preparo','forno','pronto') ORDER BY a.numero`).bind(hojeSP()).all();
+    const m = await lerMassas(env);
+    return json(req, {
+      agora: agora(),
+      preparando: results.filter(r => r.status !== "pronto").map(r => ({ numero: r.numero, nome: primeiroNome(r.nome), etapa: r.status })),
+      prontos: results.filter(r => r.status === "pronto").map(r => ({ numero: r.numero, nome: primeiroNome(r.nome), desde: r.pronto_em }))
+        .sort((x, y) => String(y.desde).localeCompare(String(x.desde))),
+      destaque: PRECOS[cfg.destaque] ? cfg.destaque : null,
+      cardapio: Object.entries(PRECOS).map(([id, v]) => ({ id, nome: v.nome, centavos: v.centavos })),
+      massas: m.ativo ? { restam: m.restam } : null,
+    });
   }
   if (req.method === "GET" && path === "/selos") {
     if (!origens(req).includes(req.headers.get("Origin") || "")) return json(req, { error: "origem" }, 403);
@@ -230,7 +401,8 @@ export async function handle(req, env) {
   }
   if (req.method === "GET" && path === "/status") {
     if (!origens(req).includes(req.headers.get("Origin") || "")) return json(req, { error: "origem" }, 403);
-    return json(req, await lerLoja(env));
+    const m = await lerMassas(env);
+    return json(req, { ...(await lerLoja(env)), massas: m.ativo ? { restam: m.restam } : null });
   }
   if (req.method === "GET" && path === "/") return json(req, { ok: true, api: "painel-balcao" });
 
@@ -241,12 +413,14 @@ export async function handle(req, env) {
   if (req.method === "GET" && path === "/admin/pedidos") {
     const f = url.searchParams.get("status") || "abertos";
     const desde = new Date(Date.now() - 18 * 3600e3).toISOString();      // "hoje" = últimas 18 horas (cobre a noite toda)
-    const sql = f === "todos" ? "SELECT * FROM pedidos ORDER BY criado_em DESC LIMIT 200"
-      : f === "hoje" ? "SELECT * FROM pedidos WHERE criado_em > ? ORDER BY criado_em DESC"
-      : "SELECT * FROM pedidos WHERE status IN ('novo','preparo','pronto') ORDER BY criado_em ASC";
+    const base = `SELECT p.*, a.token, a.numero, a.massas, a.forno_em, a.retirado_em, v.nota, v.comentario FROM pedidos p
+      LEFT JOIN acompanhamento a ON a.pedido_id = p.id LEFT JOIN avaliacoes v ON v.pedido_id = p.id`;
+    const sql = f === "todos" ? `${base} ORDER BY p.criado_em DESC LIMIT 200`
+      : f === "hoje" ? `${base} WHERE p.criado_em > ? ORDER BY p.criado_em DESC`
+      : `${base} WHERE p.status IN ('novo','preparo','forno','pronto') ORDER BY p.criado_em ASC`;
     const st = env.DB.prepare(sql);
     const { results } = await (f === "hoje" ? st.bind(desde) : st).all();
-    return json(req, { pedidos: results.map(r => ({ ...r, ip: undefined, fid: !!r.fid, itens: JSON.parse(r.itens) })) });
+    return json(req, { agora: agora(), pedidos: results.map(r => ({ ...r, ip: undefined, fid: !!r.fid, itens: JSON.parse(r.itens) })) });
   }
 
   if (req.method === "POST" && path === "/admin/pedido/status") {
@@ -255,6 +429,8 @@ export async function handle(req, env) {
     const p = await env.DB.prepare("SELECT * FROM pedidos WHERE id = ?").bind(b.id).first();
     if (!p) return json(req, { error: "pedido não existe" }, 404);
     await env.DB.prepare("UPDATE pedidos SET status = ?, atualizado_em = ? WHERE id = ?").bind(b.status, agora(), b.id).run();
+    const col = ETAPA_COL[b.status];                      // hora de cada etapa, para o acompanhamento do cliente
+    if (col && b.status !== p.status) await env.DB.prepare(`UPDATE acompanhamento SET ${col} = ? WHERE pedido_id = ?`).bind(agora(), b.id).run();
     let selo = null;
     if (p.fid && p.tel) {
       if (b.status === "retirado") {                                         // 1 selo por pedido, só na retirada
@@ -400,6 +576,54 @@ export async function handle(req, env) {
     const id = Number(url.searchParams.get("id")) || 0;
     const { results } = await env.DB.prepare("SELECT delta, saldo, tipo, motivo, criado_em FROM estoque_mov WHERE item_id = ? ORDER BY id DESC LIMIT 50").bind(id).all();
     return json(req, { movimentos: results });
+  }
+
+  /* massas do dia */
+  const massasAdmin = async () => {
+    const { results } = await env.DB.prepare("SELECT id, nome, quantidade FROM estoque_itens WHERE ativo = 1 AND categoria = 'Massa' AND unidade = 'un' ORDER BY nome").all();
+    return { ...(await lerMassas(env)), estoque: results };
+  };
+  if (req.method === "GET" && path === "/admin/massas") return json(req, await massasAdmin());
+  if (req.method === "POST" && path === "/admin/massas") {
+    const b = await req.json().catch(() => ({})), hoje = hojeSP(), v = await lerConfig(env, "massas");
+    const atual = v.dia === hoje && Number.isInteger(v.feitas) ? v : null;
+    if (b.desligar) await salvarConfig(env, "massas", {});
+    else if (b.feitas !== undefined) {
+      const n = Number(b.feitas);
+      if (!Number.isInteger(n) || n < 0 || n > MAX_MASSAS) return json(req, { error: "Digite quantas massas fez hoje (0 a 999)." }, 400);
+      await salvarConfig(env, "massas", { dia: hoje, feitas: n, balcao: atual ? Number(atual.balcao) || 0 : 0 });
+    } else if ([1, -1].includes(Number(b.balcao))) {           // pizza vendida fora do site (balcão, telefone): desconta uma massa
+      if (!atual) return json(req, { error: "Informe primeiro quantas massas fez hoje." }, 400);
+      const balcao = Math.max(0, (Number(atual.balcao) || 0) + Number(b.balcao));
+      await salvarConfig(env, "massas", { ...atual, balcao });
+    } else return json(req, { error: "dados" }, 400);
+    return json(req, { ok: true, ...(await massasAdmin()) });
+  }
+
+  /* telão do balcão */
+  if (req.method === "GET" && path === "/admin/telao") { const c = await lerConfig(env, "telao"); return json(req, { chave: c.chave || null, destaque: c.destaque || "" }); }
+  if (req.method === "POST" && path === "/admin/telao") {
+    const b = await req.json().catch(() => ({})), c = await lerConfig(env, "telao");
+    if (b.novaChave) c.chave = novoToken(18);                   // trocar a chave derruba o link antigo
+    if (b.desligar) delete c.chave;
+    if (b.destaque !== undefined) { if (b.destaque && !PRECOS[b.destaque]) return json(req, { error: "sabor desconhecido" }, 400); c.destaque = b.destaque || ""; }
+    await salvarConfig(env, "telao", c);
+    return json(req, { ok: true, chave: c.chave || null, destaque: c.destaque || "" });
+  }
+
+  /* avaliações */
+  if (req.method === "GET" && path === "/admin/avaliacoes") {
+    const { results } = await env.DB.prepare(`SELECT v.pedido_id, v.nota, v.comentario, COALESCE(v.atualizado_em, v.criado_em) AS em, p.nome, a.numero
+      FROM avaliacoes v JOIN pedidos p ON p.id = v.pedido_id LEFT JOIN acompanhamento a ON a.pedido_id = v.pedido_id ORDER BY em DESC LIMIT 200`).all();
+    const t = await env.DB.prepare("SELECT COUNT(*) AS n, AVG(nota) AS m FROM avaliacoes").first();
+    const dist = {}; for (const r of (await env.DB.prepare("SELECT nota, COUNT(*) AS n FROM avaliacoes GROUP BY nota").all()).results) dist[r.nota] = r.n;
+    return json(req, { total: t ? t.n : 0, media: t && t.n ? Math.round(t.m * 10) / 10 : null, dist, google: (await lerConfig(env, "avaliacao")).google || "", avaliacoes: results });
+  }
+  if (req.method === "POST" && path === "/admin/avaliacoes/config") {
+    const b = await req.json().catch(() => ({})), g = linkGoogle(b.google);
+    if (g === null) return json(req, { error: "Cole o link de avaliação do Google (começa com https://g.page/ ou https://search.google.com/...)." }, 400);
+    await salvarConfig(env, "avaliacao", { google: g });
+    return json(req, { ok: true, google: g });
   }
 
   return json(req, { error: "não encontrado" }, 404);

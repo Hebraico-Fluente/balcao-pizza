@@ -85,6 +85,8 @@ jobs:
           curl -fsS "$PANEL_URL/" | grep -q '"api":"painel-balcao"' && echo "servidor do painel ok"
           curl -fsS "$SITE_URL/" | grep -q "panelApi: \"$PANEL_URL\"" && echo "site ligado ao painel ok"
           curl -fsS "$SITE_URL/painel/" | grep -q "API_PADRAO = \"$PANEL_URL\"" && echo "painel ok"
+          curl -fsS "$SITE_URL/acompanhar/" | grep -q "API_PADRAO = \"$PANEL_URL\"" && echo "acompanhamento ok"
+          curl -fsS "$SITE_URL/telao/" | grep -q "API_PADRAO = \"$PANEL_URL\"" && echo "telão ok"
           for f in painel.log .wrangler/cache/wrangler-account.json painel-api/worker.js wrangler.toml; do
             c=$(curl -s -o /dev/null -w "%{http_code}" "$SITE_URL/$f")
             if [ "$c" = "200" ]; then echo "::error::$f está público"; exit 1; fi

@@ -12,6 +12,15 @@
 5. Na aba **Selos**, a equipe busca pelo celular e pode dar +1, tirar −1, **resgatar o prêmio** (desconta 10) e mandar o saldo pelo WhatsApp.
 6. A aba **Clientes** lista quem tem selos, do mais perto do prêmio para o mais longe.
 
+## Acompanhamento, telão, massas e avaliações
+
+- **Etapas:** Recebido → Massa aberta → No forno → Pronto → Retirado (ou Cancelado). No painel, um botão grande por pedido avança a etapa; "↶ Voltar" desfaz um toque errado.
+- **Link do cliente:** `/acompanhar/?t=TOKEN` (token aleatório de 128 bits, gerado no aparelho com `crypto.getRandomValues`; o servidor sorteia um se faltar). Vai na mensagem do WhatsApp. Mostra só o próprio pedido: número do dia, primeiro nome, itens e etapas. Atualiza a cada 6 s (pausa com a aba escondida).
+- **Telão:** aba **Telão** do painel → "Ligar o telão" gera o link `/telao/?k=CHAVE` (a senha do painel nunca vai na URL). Trocar a chave derruba o link antigo.
+- **Massas do dia:** barra no topo de Pedidos → "Informar massas de hoje". Cada pizza do site desconta 1 (meia a meia = 1); "Vendi 1 no balcão" desconta as vendas de fora do site. No zero o site para de aceitar pedidos. Zera sozinho à meia-noite (São Paulo).
+- **Avaliações:** 1 h depois da retirada a página do cliente pergunta "Como estava a pizza?". Todo mundo que avalia vê o botão do Google (link na aba **Avaliações**); nota de 1 a 4 vê antes a caixa de comentário privado. Nunca filtramos o Google pela nota (regra do Google contra "review gating").
+- **Banco:** só tabelas novas (`acompanhamento`, `avaliacoes`, `limites`), com `CREATE TABLE IF NOT EXISTS` — o deploy pode reaplicar o `schema.sql` sem quebrar. Ajustes ficam na tabela `config` (`massas`, `telao`, `avaliacao`).
+
 ## Publicar (Cloudflare, de graça)
 
 1. **Banco:** D1 → Create database `painel-balcao` → Console → cole `schema.sql` → Execute.
@@ -30,4 +39,4 @@
 
 ## Testar
 
-`node painel-api/test.mjs` (19 testes, com banco simulado).
+`node painel-api/test.mjs` (testes com banco simulado: pedidos, selos, estoque, loja, etapas, acompanhamento, telão, massas e avaliações).

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#6C1603">
+<title>Seu pedido · Balcão Pizza Napoletana</title>
+<link rel="icon" type="image/png" href="../img/favicon.png">
+<link rel="apple-touch-icon" href="../img/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3EDE3;--bg-2:#EAE1D3;--card:#FBF8F3;--ink:#1E1611;--muted:#6E6259;--line:rgba(30,22,17,.12);--line-2:rgba(30,22,17,.22);
+--wine:#6C1603;--wine-2:#86240E;--cream:#F3E6D6;--green:#2F6B45;--green-soft:#E3EFE6;--fire:#D9622B;
+--serif:"Instrument Serif",Georgia,serif;--sans:"Inter",system-ui,-apple-system,sans-serif;--ease:cubic-bezier(.23,1,.32,1)}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--sans);-webkit-font-smoothing:antialiased;min-height:100svh}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+button,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--wine);outline-offset:3px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+.top{background:var(--wine);color:var(--cream);font-size:13px}
+.top .in{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:38px}
+.top a{text-decoration:none;opacity:.85}
+@media(max-width:520px){.top a{display:none}.top .in{justify-content:center}}
+.in{width:min(560px,100% - 36px);margin-inline:auto}
+header .in{display:flex;align-items:center;justify-content:center;height:68px}
+header img{height:34px;width:auto}
+main{padding:4px 0 56px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:0 22px;border-radius:8px;border:0;font:500 15.5px var(--sans);text-decoration:none;cursor:pointer;transition:background-color .2s ease,box-shadow .2s ease,transform .12s var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn svg{width:18px;height:18px;flex:none}
+.b-wine{background:var(--wine);color:#fff}@media(hover:hover){.b-wine:hover{background:var(--wine-2)}}
+.b-line{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(30,22,17,.25)}@media(hover:hover){.b-line:hover{box-shadow:inset 0 0 0 1px var(--ink)}}
+.b-wa{background:#1F8F4E;color:#fff}
+.btns{display:grid;gap:10px}
+
+/* cabeçalho do pedido */
+.hello{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0 14px}
+.badge{display:inline-flex;align-items:baseline;gap:6px;padding:6px 14px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.badge b{font:400 22px/1 var(--serif);letter-spacing:0;text-transform:none}
+.live{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted)}
+.live i{width:8px;height:8px;border-radius:50%;background:#3FA466;box-shadow:0 0 0 3px rgba(63,164,102,.2)}
+.live.off i{background:#C77B62;box-shadow:0 0 0 3px rgba(199,123,98,.2)}
+h1{font:400 clamp(40px,11vw,54px)/1 var(--serif);letter-spacing:-.01em;margin:0 0 10px;text-wrap:balance}
+h1 i{color:var(--wine)}
+.lead{margin:0 0 22px;color:var(--muted);font-size:16.5px;text-wrap:pretty}
+
+/* prato + forno */
+.stage{position:relative;display:grid;place-items:center;margin:6px auto 22px;width:min(300px,78vw);aspect-ratio:1}
+.stage .plate{position:absolute;inset:7%;border-radius:50%;background:radial-gradient(circle,#fff 0 60%,#F1EBE2 61% 100%);box-shadow:0 24px 50px -26px rgba(60,20,8,.55)}
+.stage img{position:relative;width:70%;aspect-ratio:1;object-fit:cover;border-radius:50%;box-shadow:0 14px 28px -14px rgba(60,20,8,.55);transition:filter .6s ease,transform .6s var(--ease)}
+.stage.raw img{filter:saturate(.7);transform:scale(.92)}
+.stage svg.ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
+.ring circle{fill:none;stroke-width:5}
+.ring .bgc{stroke:rgba(108,22,3,.10)}
+.ring .fg{stroke:var(--fire);stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.glow{position:absolute;inset:4%;border-radius:50%;box-shadow:0 0 0 0 rgba(217,98,43,0),0 0 60px 6px rgba(217,98,43,.32);animation:calor 2.4s ease-in-out infinite;pointer-events:none}
+@keyframes calor{50%{box-shadow:0 0 0 0 rgba(217,98,43,0),0 0 80px 14px rgba(217,98,43,.45)}}
+.timer{position:absolute;left:50%;bottom:-6px;translate:-50% 0;padding:8px 16px;border-radius:999px;background:var(--ink);color:#fff;font-size:15px;font-weight:600;white-space:nowrap;box-shadow:0 10px 24px -12px rgba(0,0,0,.6)}
+.timer small{font-weight:400;opacity:.75;margin-left:6px}
+.check{position:absolute;right:9%;top:9%;width:58px;height:58px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;box-shadow:0 10px 24px -10px rgba(47,107,69,.8)}
+.check svg{width:30px;height:30px}
+
+/* etapas */
+.card{background:var(--card);border-radius:12px;box-shadow:0 0 0 1px var(--line);padding:18px 20px;margin-bottom:14px}
+.steps{list-style:none;margin:0;padding:0;display:grid}
+.steps li{position:relative;display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;min-height:46px;color:var(--muted)}
+.steps li::before{content:"";position:absolute;left:13px;top:50%;height:100%;width:2px;background:var(--line)}
+.steps li:last-child::before{display:none}
+.steps li.done::before{background:var(--wine)}
+.steps .d{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;background:var(--card);box-shadow:inset 0 0 0 2px var(--line-2);display:grid;place-items:center}
+.steps li.done .d{background:var(--wine);box-shadow:none;color:#fff}
+.steps li.done .d::after{content:"";width:9px;height:5px;border:2px solid #fff;border-top:0;border-right:0;transform:translateY(-1px) rotate(-45deg)}
+.steps li.now{color:var(--ink);font-weight:600}
+.steps li.now .d{box-shadow:inset 0 0 0 2px var(--wine),0 0 0 5px rgba(108,22,3,.12)}
+.steps li.now .d::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--wine)}
+.steps li.now.done .d::after{width:9px;height:5px;border-radius:0;background:none}
+.steps time{font-size:13px;font-weight:400;color:var(--muted)}
+.items{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.items li{display:flex;gap:10px;font-size:15.5px}
+.items b{min-width:28px;font-weight:600;font-variant-numeric:tabular-nums}
+.card h2{margin:0 0 10px;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.pick{margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:14.5px;color:var(--muted)}
+.pick b{color:var(--ink);font-weight:600}
+.pick a{color:var(--wine)}
+.sent{background:var(--green-soft);color:#1F4D30;box-shadow:none}
+.sent p{margin:0 0 12px;font-size:15px}
+.sent .btn{width:100%}
+.bye{text-align:center}
+.bye p{margin:0 0 16px;color:var(--muted)}
+.foot{margin:22px 0 0;text-align:center;font-size:13px;color:var(--muted);text-wrap:balance}
+
+/* avaliação */
+.rate{background:var(--ink);color:var(--cream);box-shadow:none;padding:22px 20px}
+.rate h2{color:#fff;font:400 32px/1.1 var(--serif);letter-spacing:0;text-transform:none;margin:0 0 6px}
+.rate p{margin:0 0 16px;color:#CFC5BC;font-size:15px}
+.stars{display:flex;gap:6px;justify-content:center;margin:4px 0 6px}
+.stars button{width:54px;height:54px;padding:0;border:0;border-radius:12px;background:rgba(255,255,255,.06);color:#6E6259;cursor:pointer;display:grid;place-items:center;transition:color .15s ease,background-color .15s ease,transform .12s var(--ease)}
+.stars button:active{transform:scale(.92)}
+.stars button.on{color:#F2B33D;background:rgba(242,179,61,.12)}
+.stars svg{width:34px;height:34px}
+.stars-l{display:flex;justify-content:space-between;font-size:12px;color:#9A8D82;max-width:300px;margin:0 auto 4px}
+.rate textarea{width:100%;min-height:110px;padding:12px 14px;border-radius:8px;border:0;background:#fff;color:var(--ink);font-size:16px;resize:vertical}
+.rate textarea:focus{outline:2px solid #F2B33D;outline-offset:2px}
+.rate .btn{width:100%}
+.rate .b-line{color:var(--cream);box-shadow:inset 0 0 0 1px rgba(243,230,214,.35)}
+.rate .b-google{background:#fff;color:var(--ink)}
+.rate .b-google svg{width:20px;height:20px}
+.rate .small{font-size:13px;color:#9A8D82;margin:10px 0 0;text-align:center}
+.rate .msg{margin:0 0 12px;color:#fff;font-size:16px}
+.rate .linkish{background:none;border:0;padding:6px;color:#CFC5BC;text-decoration:underline;cursor:pointer;font-size:13.5px;display:block;margin:12px auto 0}
+.rate .err{color:#F6A48C;font-size:14px;margin:8px 0 0}
+.rate .err:empty{display:none}
+.skel{height:240px;border-radius:12px;background:linear-gradient(90deg,var(--bg-2),var(--card),var(--bg-2));background-size:200% 100%;animation:sk 1.4s ease infinite}
+@keyframes sk{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="top"><div class="in"><span>Balcão Pizza Napoletana</span><a data-map href="#" target="_blank" rel="noopener">Alameda Augusto Stellfeld, 1277</a></div></div>
+<header><div class="in"><a href="../" aria-label="Balcão Pizza Napoletana, voltar ao site"><img src="../img/logo-wine.png" alt="Balcão Pizza Napoletana" width="810" height="284"></a></div></header>
+
+<main class="in" id="main">
+  <div class="skel" id="skel" aria-hidden="true"></div>
+
+  <section id="vazio" hidden class="card bye">
+    <h1 style="font-size:38px;margin-top:6px">Não encontramos este pedido.</h1>
+    <p id="vazioTxt">Confira se o link está completo, do jeito que chegou no WhatsApp.</p>
+    <div class="btns"><a class="btn b-wa" data-wa target="_blank" rel="noopener">Falar com a Balcão no WhatsApp</a><a class="btn b-line" href="../#cardapio">Ver o cardápio</a></div>
+  </section>
+
+  <div id="ped" hidden>
+    <div class="hello"><span class="badge">Pedido nº <b class="num" id="numero"></b></span><span class="live" id="live" role="status"><i></i><span id="liveTxt">Atualiza sozinho</span></span></div>
+    <div aria-live="polite" aria-atomic="true"><h1 id="titulo"></h1><p class="lead" id="sub"></p></div>
+
+    <section class="card sent" id="enviado" hidden>
+      <p><b>Pedido enviado!</b> Se a mensagem não saiu no WhatsApp, toque abaixo para abrir de novo.</p>
+      <a class="btn b-wa" id="waDeNovo" target="_blank" rel="noopener">Abrir o WhatsApp com o pedido</a>
+    </section>
+
+    <div class="stage raw" id="stage" aria-hidden="true">
+      <div class="plate"></div><div class="glow" id="glow" hidden></div>
+      <img id="foto" src="../img/lg/margherita.jpg" alt="" width="901" height="901">
+      <svg class="ring" id="ring" viewBox="0 0 100 100" hidden><circle class="bgc" cx="50" cy="50" r="47"/><circle class="fg" id="ringFg" cx="50" cy="50" r="47" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg>
+      <span class="check" id="check" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+      <span class="timer num" id="timer" hidden></span>
+    </div>
+
+    <section class="card rate" id="rate" hidden aria-labelledby="rateT">
+      <div id="rateAsk">
+        <h2 id="rateT">Como estava a pizza?</h2>
+        <p>Toque nas estrelas. Leva 5 segundos e ajuda muito a Balcão.</p>
+        <div class="stars" role="radiogroup" aria-label="Nota de 1 a 5 estrelas" id="stars"></div>
+        <div class="stars-l" aria-hidden="true"><span>Não gostei</span><span>Amei</span></div>
+      </div>
+      <div id="rateLow" hidden>
+        <p class="msg" id="lowMsg">Obrigado por contar. O que a gente pode melhorar?</p>
+        <label for="coment" class="small" style="display:block;text-align:left;margin:0 0 6px;color:#CFC5BC">Comentário para a equipe da Balcão (só a gente lê)</label>
+        <textarea id="coment" maxlength="600" placeholder="Ex.: a pizza chegou fria, faltou sal…"></textarea>
+        <p class="err" id="rateErr" role="alert"></p>
+        <div class="btns" style="margin-top:12px"><button class="btn b-wine" type="button" id="enviarComent">Enviar para a equipe</button></div>
+      </div>
+      <div id="rateThanks" hidden><p class="msg" id="thanksMsg"></p></div>
+      <div id="googleBox" hidden>
+        <p class="small" id="googleTxt" style="text-align:left;margin:14px 0 10px"></p>
+        <a class="btn b-google" id="googleBtn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.6 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2.1-1.9 3.3-4.8 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.2a6.6 6.6 0 0 1 0-4.3V7.1H2.1a11 11 0 0 0 0 9.9z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 0 0 2.1 7.1l3.7 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>Avaliar a Balcão no Google</a>
+      </div>
+      <button class="linkish" type="button" id="mudar" hidden>Mudar a nota</button>
+    </section>
+
+    <section class="card" aria-labelledby="etT"><h2 id="etT">Andamento</h2><ol class="steps" id="steps"></ol></section>
+
+    <section class="card" aria-labelledby="itT">
+      <h2 id="itT">Seu pedido</h2>
+      <ul class="items" id="itens"></ul>
+      <p class="pick">Retirada: <b id="retirada"></b><br><span data-addr></span> · <a data-map href="#" target="_blank" rel="noopener">Como chegar</a></p>
+    </section>
+
+    <section class="card bye" id="cancelado" hidden>
+      <p>Se foi engano ou você quiser entender o que houve, fale com a gente. Desculpe o transtorno.</p>
+      <div class="btns"><a class="btn b-wa" data-wa target="_blank" rel="noopener">Falar com a Balcão no WhatsApp</a><a class="btn b-line" href="../#cardapio">Ver o cardápio</a></div>
+    </section>
+
+    <div class="btns" id="ajuda"><a class="btn b-line" data-wa target="_blank" rel="noopener">Dúvida? Fale no WhatsApp</a></div>
+    <p class="foot" id="foot">Esta página se atualiza sozinha. O link também está na mensagem do WhatsApp, para você abrir de novo quando quiser.</p>
+  </div>
+</main>
+
+<script>
+/* Endereço do servidor do painel (preenchido pelo scripts/montar-site.sh). */
+const API_PADRAO = "";
+const CONFIG = { whatsapp: "5541992132280", address: "Alameda Augusto Stellfeld, 1277 · Curitiba", mapQuery: "Balcão Pizza Napoletana, Alameda Augusto Stellfeld, 1277, Curitiba" };
+const POLL_MS = 6000;
+const FOTOS = ["mussarela","calabresa","tres-queijos","margherita","diavola","gorgonzola"];
+
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hora = iso => iso ? new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "";
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const API = API_PADRAO.replace(/\/$/, "");
+const q = new URLSearchParams(location.search), T = q.get("t") || location.hash.replace(/^#t?=?/, "");
+const pedirAgora = q.get("a") === "1";                       // veio do "Pedir avaliação" do painel: pergunta já
+$$("[data-map]").forEach(a => a.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(CONFIG.mapQuery));
+$$("[data-addr]").forEach(e => e.textContent = CONFIG.address);
+const wa = txt => "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(txt);
+$$("[data-wa]").forEach(a => a.href = wa("Olá, Balcão! Tenho uma dúvida sobre o meu pedido."));
+
+const ETAPAS = [["novo", "Recebido", "recebido"], ["preparo", "Massa aberta", "massa"], ["forno", "No forno", "forno"], ["pronto", "Pronta para retirar", "pronto"], ["retirado", "Retirado", "retirado"]];
+let P = null, recebidoEm = 0, timer = null, tick = null, tentativas = 0, rateAberta = false, notaAtual = 0;
+
+async function carregar(){
+  clearTimeout(timer);
+  if (!API || !T) return semPedido();
+  try {
+    const r = await fetch(API + "/acompanhar?t=" + encodeURIComponent(T), { cache: "no-store" });
+    if (r.status === 404) { if (++tentativas < 4) { timer = setTimeout(carregar, 2500); return; } return semPedido(); }   // o pedido pode estar chegando ao servidor
+    if (!r.ok) throw new Error(r.status === 429 ? "Muitas consultas. Tentando de novo…" : "Sem conexão. Tentando de novo…");
+    P = await r.json(); recebidoEm = Date.now(); live(true); desenhar();
+  } catch (e) { live(false, e.message); }
+  agendar();
+}
+function agendar(){
+  clearTimeout(timer);
+  if (!P) { timer = setTimeout(carregar, POLL_MS * 2); return; }
+  if (P.etapa === "cancelado") return;                                        // nada mais muda
+  if (P.etapa === "retirado") {                                               // só falta a pergunta "Como estava a pizza?"
+    const falta = P.avaliacao ? Date.parse(P.avaliacao.desde) - agoraServ() : -1;
+    if (falta > 0) timer = setTimeout(() => { desenhar(); }, Math.min(falta + 500, 2 ** 31 - 1));
+    return;
+  }
+  if (!document.hidden) timer = setTimeout(carregar, POLL_MS);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && P && !["cancelado", "retirado"].includes(P.etapa)) carregar(); else if (document.hidden) clearTimeout(timer); });
+const agoraServ = () => Date.parse(P.agora) + (Date.now() - recebidoEm);   // relógio do servidor (o do celular pode estar errado)
+function live(on, txt){ $("#live").classList.toggle("off", !on); $("#liveTxt").textContent = on ? "Atualiza sozinho" : txt || "Sem conexão"; }
+
+function semPedido(){ $("#skel").hidden = true; $("#ped").hidden = true; $("#vazio").hidden = false;
+  if (!API) $("#vazioTxt").textContent = "O acompanhamento online está desligado agora. Fale com a gente no WhatsApp."; }
+
+function textos(p){
+  const n = esc(p.nome), et = p.etapa;
+  if (et === "novo") return [`Recebemos o seu pedido, <i>${n}</i>.`, "Já está na fila do balcão. Assim que a massa for aberta, esta página muda sozinha."];
+  if (et === "preparo") return [`A massa está sendo aberta.`, "À mão, uma a uma: massa de 48 horas de fermentação, molho e cobertura."];
+  if (et === "forno") return [`Sua pizza está <i>no forno.</i>`, "A napoletana assa em cerca de 90 segundos, a uns 480 °C."];
+  if (et === "pronto") return [`Pronta para retirar, <i>${n}!</i>`, "Pode vir buscar no balcão. Ela está esperando por você."];
+  if (et === "retirado") return [`Bom apetite, <i>${n}!</i>`, "Obrigado por pedir na Balcão."];
+  return [`Seu pedido foi cancelado.`, `Sentimos muito, ${n}. O pedido nº ${p.numero} não vai ser preparado.`];
+}
+function desenhar(){
+  const p = P, et = p.etapa; $("#skel").hidden = true; $("#vazio").hidden = true; $("#ped").hidden = false;
+  $("#numero").textContent = String(p.numero).padStart(2, "0");
+  document.title = `Pedido nº ${p.numero} · ${ETAPAS.find(x => x[0] === et)?.[1] || "Cancelado"} · Balcão`;
+  const [t, s] = textos(p); if ($("#titulo").innerHTML !== t) $("#titulo").innerHTML = t; $("#sub").textContent = s;
+  const foto = (p.itens.find(i => FOTOS.includes(i.sabor)) || {}).sabor; if (foto) $("#foto").src = `../img/lg/${foto}.jpg`;
+  $("#foto").alt = "";
+  $("#stage").classList.toggle("raw", ["novo", "preparo"].includes(et));
+  $("#stage").hidden = et === "cancelado";
+  $("#check").hidden = !["pronto", "retirado"].includes(et);
+  forno(et === "forno");
+  // etapas
+  const idx = ETAPAS.findIndex(x => x[0] === et);
+  if (et === "cancelado") { $("#steps").innerHTML = ETAPAS.filter(x => x[0] !== "retirado" && p.etapas[x[2]]).map(([k, nome, campo]) => `<li class="done"><span class="d" aria-hidden="true"></span><span>${nome}</span><time class="num">${hora(p.etapas[campo])}</time></li>`).join("")
+    + `<li class="now" aria-current="step"><span class="d" aria-hidden="true"></span><span>Cancelado</span><time class="num">${hora(p.etapas.cancelado)}</time></li>`; }
+  else $("#steps").innerHTML = ETAPAS.map(([k, nome, campo], i) => {
+    const done = idx >= 0 && (i < idx || (i === idx && ["retirado"].includes(et))), now = i === idx;
+    return `<li class="${done ? "done" : ""} ${now ? "now" : ""}" ${now ? 'aria-current="step"' : ""}><span class="d" aria-hidden="true"></span><span>${nome}</span><time class="num">${i <= idx ? hora(p.etapas[campo]) : ""}</time></li>`; }).join("")
+;
+  $("#itens").innerHTML = p.itens.map(i => `<li><b>${i.qtd}×</b><span>${esc(i.nome)}</span></li>`).join("");
+  $("#retirada").textContent = p.retirada || "o quanto antes";
+  $("#cancelado").hidden = et !== "cancelado"; $("#ajuda").hidden = et === "cancelado";
+  $("#live").hidden = ["cancelado", "retirado"].includes(et);
+  $("#foot").hidden = et === "cancelado";
+  $$("[data-wa]").forEach(a => a.href = wa(`Olá, Balcão! Sobre o meu pedido nº ${p.numero} (${p.nome}):`));
+  // "Pedido enviado!" com o botão para reabrir o WhatsApp (só logo depois de pedir)
+  let msg = null; try { msg = sessionStorage.getItem("balcao-wa-msg"); } catch (e) {}
+  $("#enviado").hidden = !(q.get("novo") === "1" && et === "novo" && msg);
+  if (msg) $("#waDeNovo").href = wa(msg);
+  avaliacao();
+}
+
+/* contagem do forno: ~90 s, discreta; com "reduzir movimento" fica só o número */
+function forno(on){
+  $("#ring").hidden = !on || reduce; $("#glow").hidden = !on || reduce; $("#timer").hidden = !on; clearInterval(tick);
+  if (!on) return;
+  const passo = () => {
+    const ini = Date.parse(P.etapas.forno || P.agora), falta = Math.max(0, P.fornoSeg - (agoraServ() - ini) / 1000);
+    $("#ringFg").style.strokeDashoffset = String(100 - (falta / P.fornoSeg) * 100);
+    $("#timer").innerHTML = falta > 0 ? `${Math.floor(falta / 60)}:${String(Math.ceil(falta % 60) === 60 ? 0 : Math.ceil(falta % 60)).padStart(2, "0")}<small>no forno</small>` : `Saindo do forno…`;
+    if (falta <= 0) clearInterval(tick);
+  };
+  passo(); tick = setInterval(passo, 1000);
+}
+
+/* ---------- Como estava a pizza? ----------
+   Todo cliente que avalia vê a opção de avaliar no Google, qualquer que seja a nota (regra do Google:
+   nada de mandar só os satisfeitos para lá). Nota baixa ganha, antes, a caixa de comentário privado. */
+const STAR = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>';
+$("#stars").innerHTML = [1, 2, 3, 4, 5].map(n => `<button type="button" role="radio" aria-checked="false" data-n="${n}" aria-label="${n} estrela${n > 1 ? "s" : ""}">${STAR}</button>`).join("");
+function estrelas(n){ $$("#stars button").forEach(b => { b.classList.toggle("on", +b.dataset.n <= n); b.setAttribute("aria-checked", +b.dataset.n === n); }); }
+function avaliacao(){
+  const a = P.avaliacao;
+  if (!a || !a.aberta || (!pedirAgora && agoraServ() < Date.parse(a.desde) && !a.nota)) { $("#rate").hidden = true; if (P.etapa === "retirado" && a && !a.nota) $("#sub").textContent = "Obrigado por pedir na Balcão. Daqui a pouco a gente pergunta o que você achou."; return; }
+  $("#rate").hidden = false;
+  if (rateAberta) return;                                  // não atrapalha quem está escrevendo
+  if (a.nota) mostrarFeito(a.nota, a.comentou); else mostrarPergunta();
+}
+function mostrarPergunta(){ rateAberta = false; $("#rateAsk").hidden = false; $("#rateLow").hidden = true; $("#rateThanks").hidden = true; $("#googleBox").hidden = true; $("#mudar").hidden = true; estrelas(0); }
+function google(texto){ const g = P.avaliacao && P.avaliacao.google; $("#googleBox").hidden = !g; if (g) { $("#googleBtn").href = g; $("#googleTxt").textContent = texto; } }
+function mostrarFeito(n, comentou){
+  $("#rateAsk").hidden = true; $("#rateLow").hidden = true; $("#rateThanks").hidden = false; $("#mudar").hidden = false;
+  $("#thanksMsg").textContent = n === 5 ? `Que bom que você gostou, ${P.nome}! Obrigado.` : comentou ? "Recebemos o seu comentário. Obrigado por ajudar a Balcão a melhorar." : "Obrigado pela nota!";
+  google(n === 5 ? "Se puder, conte também no Google. Ajuda os vizinhos a conhecer a Balcão." : "Se quiser, você também pode deixar sua avaliação pública no Google.");
+}
+$("#stars").addEventListener("click", async e => {
+  const b = e.target.closest("[data-n]"); if (!b) return; const n = +b.dataset.n; estrelas(n); notaAtual = n;
+  $$("#stars button").forEach(x => x.disabled = true);
+  try {
+    const r = await fetch(API + "/avaliacao", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ t: T, nota: n }) });
+    const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Não consegui enviar. Tente de novo.");
+    P.avaliacao.nota = n; if (j.google !== undefined) P.avaliacao.google = j.google;
+    if (n === 5) { rateAberta = false; mostrarFeito(5); }
+    else {
+      rateAberta = true; $("#rateAsk").hidden = true; $("#rateLow").hidden = false; $("#mudar").hidden = false; $("#rateErr").textContent = "";
+      $("#lowMsg").textContent = n <= 2 ? "Poxa, sentimos muito. Conta pra gente o que aconteceu?" : "Obrigado por contar. O que a gente pode melhorar?";
+      google("Se preferir, você também pode deixar sua avaliação pública no Google.");
+      setTimeout(() => $("#coment").focus(), 50);
+    }
+  } catch (x) { estrelas(0); alert(x.message); }
+  finally { $$("#stars button").forEach(x => x.disabled = false); }
+});
+$("#enviarComent").addEventListener("click", async () => {
+  const c = $("#coment").value.trim(), b = $("#enviarComent"); $("#rateErr").textContent = "";
+  if (c.length < 2) { $("#rateErr").textContent = "Escreva um comentário curto, por favor."; return $("#coment").focus(); }
+  b.disabled = true;
+  try {
+    const r = await fetch(API + "/avaliacao", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ t: T, nota: notaAtual || P.avaliacao.nota, comentario: c }) });
+    const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Não consegui enviar. Tente de novo.");
+    rateAberta = false; P.avaliacao.comentou = true; mostrarFeito(notaAtual || P.avaliacao.nota, true);
+  } catch (x) { $("#rateErr").textContent = x.message; }
+  finally { b.disabled = false; }
+});
+$("#mudar").addEventListener("click", () => { rateAberta = true; mostrarPergunta(); rateAberta = true; $("#stars button").focus(); });
+
+carregar();
+</script>
+</body>
+</html>

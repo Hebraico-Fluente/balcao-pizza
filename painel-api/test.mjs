@@ -1,7 +1,7 @@
 // Teste local do painel (D1 simulado). Uso: node painel-api/test.mjs
 import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
-import { handle, normTel, hojeSP } from "./worker.js";
+import { handle, normTel, hojeSP, novoToken } from "./worker.js";
 
 const db = new DatabaseSync(":memory:");
 db.exec(fs.readFileSync(new URL("./schema.sql", import.meta.url), "utf8"));
@@ -110,3 +110,135 @@ await req("POST", "/admin/pedido/status", { id: pz.id, status: "retirado" }, K);
 ok((await est(caixa)).quantidade === 7, "retirar de novo volta a baixar");
 j = await (await req("GET", "/admin/estoque/historico?id=" + caixa, null, K)).json();
 ok(j.movimentos.map(m => m.tipo).join() === "pedido,estorno,pedido,contagem", "histórico mostra baixa e estorno do pedido");
+
+/* ---------- acompanhamento ao vivo (link secreto do cliente) ---------- */
+let ipN = 0; const ipNovo = () => `10.0.${Math.floor(++ipN / 200)}.${ipN % 200}`;
+const novoPed = async (o = {}) => { const p = ped({ token: novoToken(), ...o }); const r = await req("POST", "/pedido", p, { ip: ipNovo() }); return { p, r, j: await r.json() }; };
+const acomp = (t, o = {}) => req("GET", "/acompanhar?t=" + encodeURIComponent(t), null, { ip: "20.0.0.1", ...o });
+ok(/^[A-Za-z0-9_-]{22}$/.test(novoToken()) && novoToken() !== novoToken(), "token aleatório de 128 bits em base64url");
+let A = await novoPed({ nome: "Ana Maria Souza", tel: "(41) 99991-9434", obs: "interfone 12" });
+ok(A.r.status === 200 && A.j.token === A.p.token && Number.isInteger(A.j.numero) && A.j.numero >= 1, "pedido devolve o token e o número do dia");
+let B = await novoPed({ nome: "Bruno", fid: false, tel: "", itens: [{ id: "diavola", qtd: 1 }] });
+ok(B.j.numero === A.j.numero + 1, "número do dia é sequencial");
+const semTok = await (await req("POST", "/pedido", ped({ fid: false, tel: "" }), { ip: ipNovo() })).json();
+ok(/^[A-Za-z0-9_-]{22,}$/.test(semTok.token), "sem token do site, o servidor sorteia um");
+r = await req("POST", "/pedido", { ...A.p, token: novoToken() }, { ip: ipNovo() }); j = await r.json();
+ok(r.status === 200 && !("token" in j), "reenviar o mesmo código com outro token não entrega o link de ninguém");
+j = await (await req("POST", "/pedido", A.p, { ip: ipNovo() })).json(); ok(j.token === A.p.token, "reenvio do próprio pedido (mesmo token) devolve o link");
+j = await (await acomp(A.p.token)).json();
+ok(j.etapa === "novo" && j.nome === "Ana" && j.numero === A.j.numero && j.itens[0].nome === "Margherita" && j.itens[0].qtd === 2, "cliente vê etapa, número, primeiro nome e itens");
+const txt = JSON.stringify(j);
+ok(!/9434|99991|Souza|interfone|total|B1411|"id"|"tel"/.test(txt), "acompanhamento não mostra telefone, sobrenome, observação, total nem código");
+j = await (await acomp(B.p.token)).json(); ok(j.nome === "Bruno" && j.itens[0].nome === "Diavola", "outro token só vê o próprio pedido");
+r = await acomp(novoToken()); ok(r.status === 404, "token inventado não acha nada");
+r = await acomp("curto"); ok(r.status === 404, "token com formato inválido é recusado");
+r = await acomp(A.p.token, { origin: "https://outro.com" }); ok(r.status === 403, "acompanhamento só pelo site da Balcão");
+for (const [st, et] of [["preparo", "preparo"], ["forno", "forno"], ["pronto", "pronto"]]) {
+  await req("POST", "/admin/pedido/status", { id: A.p.id, status: st }, K);
+  j = await (await acomp(A.p.token)).json(); ok(j.etapa === et, `etapa ${st} aparece para o cliente`);
+}
+ok(j.etapas.massa && j.etapas.forno && j.etapas.pronto && j.fornoSeg === 90 && j.agora, "guarda a hora de cada etapa (contagem do forno)");
+j = await (await req("GET", "/admin/pedidos?status=abertos", null, K)).json();
+ok(j.pedidos.some(p => p.id === A.p.id && p.token === A.p.token && p.numero === A.j.numero), "painel recebe o token e o número para montar os links");
+await req("POST", "/admin/pedido/status", { id: B.p.id, status: "forno" }, K);
+j = await (await req("GET", "/admin/pedidos?status=abertos", null, K)).json(); ok(j.pedidos.some(p => p.id === B.p.id && p.status === "forno"), "pedido no forno continua em andamento");
+await req("POST", "/admin/pedido/status", { id: B.p.id, status: "cancelado" }, K);
+j = await (await acomp(B.p.token)).json(); ok(j.etapa === "cancelado" && j.etapas.cancelado, "cancelado no painel aparece para o cliente");
+let lim404 = 0; for (let i = 0; i < 32; i++) { r = await acomp(novoToken(), { ip: "30.0.0.1" }); if (r.status === 429) lim404++; }
+r = await acomp(A.p.token, { ip: "30.0.0.1" });
+ok(lim404 === 2 && r.status === 429, "muitos tokens errados no mesmo aparelho: bloqueia por 10 minutos");
+
+/* ---------- telão ---------- */
+const tela = (k, o = {}) => req("GET", "/telao" + (k === undefined ? "" : "?k=" + encodeURIComponent(k)), null, { ip: "40.0.0.1", ...o });
+r = await tela("qualquer"); ok(r.status === 403, "telão desligado enquanto não há chave");
+r = await req("POST", "/admin/telao", { novaChave: true }); ok(r.status === 401, "criar a chave do telão exige senha");
+j = await (await req("POST", "/admin/telao", { novaChave: true, destaque: "diavola" }, K)).json();
+const chave = j.chave; ok(/^[A-Za-z0-9_-]{24}$/.test(chave) && chave !== env.ADMIN_KEY && j.destaque === "diavola", "painel cria a chave do telão e a pizza do dia");
+r = await tela(); ok(r.status === 401, "telão sem chave é recusado");
+r = await tela("chave-errada-123"); ok(r.status === 401, "telão com chave errada é recusado");
+r = await tela(env.ADMIN_KEY); ok(r.status === 401, "a senha do painel não abre o telão");
+r = await tela(chave, { origin: "https://outro.com" }); ok(r.status === 403, "telão só no site da Balcão");
+const C = await novoPed({ nome: "Carla Dias", tel: "(41) 98888-7777" });
+j = await (await tela(chave)).json();
+ok(j.prontos.some(x => x.numero === A.j.numero && x.nome === "Ana") && j.preparando.some(x => x.numero === C.j.numero && x.nome === "Carla"), "telão mostra preparando e prontos com número e primeiro nome");
+ok(!/9434|7777|Souza|Dias|Margherita"|qtd|tel|token|B1411/.test(JSON.stringify({ p: j.preparando, r: j.prontos })), "telão não mostra telefone, sobrenome, itens nem token");
+ok(!j.preparando.some(x => x.numero === B.j.numero) && j.destaque === "diavola" && j.cardapio.length === 6, "cancelado sai do telão; cardápio e pizza do dia para girar");
+const velha = chave; j = await (await req("POST", "/admin/telao", { novaChave: true }, K)).json();
+ok((await tela(velha)).status === 401 && (await tela(j.chave)).status === 200, "trocar a chave derruba o link antigo");
+await req("POST", "/admin/telao", { desligar: true }, K); ok((await tela(j.chave)).status === 403, "desligar o telão");
+
+/* ---------- massas do dia ---------- */
+j = await (await req("GET", "/status", null, { ip: "50.0.0.1" })).json(); ok(j.massas === null, "sem massas informadas hoje, o site não mostra contagem");
+r = await req("POST", "/admin/massas", { feitas: 10 }); ok(r.status === 401, "informar massas exige senha");
+r = await req("POST", "/admin/massas", { feitas: -2 }, K); ok(r.status === 400, "recusa número de massas inválido");
+r = await req("POST", "/admin/massas", { balcao: 1 }, K); ok(r.status === 400, "balcão −1 antes de informar as massas é recusado");
+let M = await (await req("GET", "/admin/massas", null, K)).json(); const jaUsadas = M.site;
+ok(M.ativo === false && jaUsadas > 0, "conta as massas dos pedidos de hoje feitos pelo site");
+M = await (await req("POST", "/admin/massas", { feitas: jaUsadas + 3 }, K)).json(); ok(M.restam === 3 && M.feitas === jaUsadas + 3, "loja informa as massas de hoje");
+j = await (await req("GET", "/status", null, { ip: "50.0.0.1" })).json(); ok(j.massas && j.massas.restam === 3 && !("feitas" in j.massas), "site recebe só quantas restam");
+const MM = await novoPed({ fid: false, tel: "", itens: [{ id: "margherita", meia: "diavola", qtd: 1 }] });
+ok(MM.r.status === 200, "meia a meia entra");
+j = await (await req("GET", "/admin/pedidos?status=abertos", null, K)).json(); const mm = j.pedidos.find(p => p.id === MM.p.id);
+ok(mm.total === 4990 && mm.itens[0].nome === "½ Margherita + ½ Diavola" && mm.massas === 1, "meia a meia = 1 massa, cobra a metade mais cara");
+M = await (await req("GET", "/admin/massas", null, K)).json(); ok(M.restam === 2, "cada pizza desconta uma massa");
+r = await novoPed({ fid: false, tel: "", itens: [{ id: "mussarela", qtd: 3 }] }); ok(r.r.status === 409 && r.j.massas.restam === 2, "não aceita mais pizzas do que as massas que restam");
+M = await (await req("POST", "/admin/massas", { balcao: 1 }, K)).json(); ok(M.restam === 1 && M.balcao === 1, "venda no balcão desconta uma massa");
+const ULT = await novoPed({ fid: false, tel: "", itens: [{ id: "mussarela", qtd: 1 }] }); ok(ULT.r.status === 200, "última massa vendida");
+j = await (await req("GET", "/status", null, { ip: "50.0.0.1" })).json(); ok(j.massas.restam === 0, "zero massas: o site sabe que acabou");
+r = await novoPed({ fid: false, tel: "", itens: [{ id: "mussarela", qtd: 1 }] }); ok(r.r.status === 409 && /acabaram/.test(r.j.error), "massas acabaram: pedido recusado");
+await req("POST", "/admin/pedido/status", { id: ULT.p.id, status: "cancelado" }, K);
+M = await (await req("GET", "/admin/massas", null, K)).json(); ok(M.restam === 1, "cancelar o pedido devolve a massa");
+M = await (await req("POST", "/admin/massas", { feitas: M.feitas + 4 }, K)).json(); ok(M.restam === 5 && M.balcao === 1, "corrigir as massas feitas mantém as do balcão");
+await novo("Bolinha de massa", "un", 40, 5); await (await req("POST", "/admin/estoque/item", { nome: "Massa pronta", unidade: "un", quantidade: 12, categoria: "Massa" }, K)).json();
+M = await (await req("GET", "/admin/massas", null, K)).json(); ok(M.estoque.length === 1 && M.estoque[0].nome === "Massa pronta", "sugere o saldo do item de massa (categoria Massa, em un) do estoque");
+const ontem = hojeSP(new Date(Date.now() - 86400e3));
+db.prepare("UPDATE config SET valor = ? WHERE chave = 'massas'").run(JSON.stringify({ dia: ontem, feitas: 0, balcao: 0 }));
+j = await (await req("GET", "/status", null, { ip: "50.0.0.1" })).json(); ok(j.massas === null, "virada do dia: a contagem de ontem não vale hoje");
+r = await novoPed({ fid: false, tel: "", itens: [{ id: "mussarela", qtd: 2 }] }); ok(r.r.status === 200, "no dia seguinte o pedido entra de novo");
+const antes = (await (await req("GET", "/admin/massas", null, K)).json()).site;
+db.prepare("UPDATE acompanhamento SET dia = ? WHERE pedido_id = ?").run(ontem, r.p.id);
+ok((await (await req("GET", "/admin/massas", null, K)).json()).site === antes - 2, "pedidos de ontem não contam nas massas de hoje");
+await req("POST", "/admin/massas", { feitas: 4 }, K); await req("POST", "/admin/massas", { desligar: true }, K);
+ok((await (await req("GET", "/status", null, { ip: "50.0.0.1" })).json()).massas === null, "desligar a contagem de massas");
+
+/* ---------- avaliações ---------- */
+const avaliar = (t, nota, comentario, o = {}) => req("POST", "/avaliacao", { t, nota, ...(comentario !== undefined ? { comentario } : {}) }, { ip: "60.0.0.1", ...o });
+r = await avaliar(C.p.token, 5); ok(r.status === 409, "não avalia antes de retirar");
+j = await (await acomp(C.p.token, { ip: "20.0.0.9" })).json(); ok(j.avaliacao === null, "antes da retirada não há pergunta");
+await req("POST", "/admin/pedido/status", { id: A.p.id, status: "retirado" }, K);
+j = await (await acomp(A.p.token, { ip: "20.0.0.9" })).json();
+const espera = Date.parse(j.avaliacao.desde) - Date.parse(j.etapas.retirado);
+ok(j.etapa === "retirado" && j.avaliacao.aberta && Math.abs(espera - 3600e3) < 1000 && j.avaliacao.nota === null, "retirado: a pergunta abre 1 hora depois");
+ok(j.avaliacao.google === null, "sem link do Google configurado, não oferece o Google");
+r = await avaliar(A.p.token, 7); ok(r.status === 400, "nota fora de 1 a 5 é recusada");
+r = await avaliar(novoToken(), 5); ok(r.status === 404, "avaliar com token inventado não acha nada");
+r = await avaliar(A.p.token, 5, undefined, { origin: "https://outro.com" }); ok(r.status === 403, "avaliação só pelo site da Balcão");
+j = await (await avaliar(A.p.token, 5)).json(); ok(j.ok && j.google === null, "5 estrelas sem link: só agradece");
+r = await req("POST", "/admin/avaliacoes/config", { google: "https://g.page/r/abc" }); ok(r.status === 401, "link do Google exige senha");
+for (const ruim of ["http://g.page/r/abc", "https://g.page.evil.com/x", "javascript:alert(1)", "https://google.com.evil.io/"])
+  ok((await req("POST", "/admin/avaliacoes/config", { google: ruim }, K)).status === 400, "recusa link que não é do Google: " + ruim);
+j = await (await req("POST", "/admin/avaliacoes/config", { google: "https://search.google.com/local/writereview?placeid=ChIJ123" }, K)).json();
+ok(j.google.startsWith("https://search.google.com/local/writereview"), "salva o link de avaliação do Google");
+j = await (await avaliar(A.p.token, 5)).json(); ok(j.google.includes("writereview"), "5 estrelas: oferece o Google");
+j = await (await avaliar(A.p.token, 3, "  Massa boa, mas veio fria  ")).json();
+ok(j.ok && j.google, "nota baixa também recebe o link do Google (sem filtrar por nota)");
+j = await (await avaliar(A.p.token, 4)).json();
+let AV = await (await req("GET", "/admin/avaliacoes", null, K)).json();
+ok(AV.avaliacoes.length === 1 && AV.avaliacoes[0].nota === 4 && AV.avaliacoes[0].comentario === "Massa boa, mas veio fria" && AV.avaliacoes[0].numero === A.j.numero, "painel recebe nota e comentário privado (corrigir a nota mantém o comentário)");
+await req("POST", "/admin/pedido/status", { id: C.p.id, status: "retirado" }, K);
+await avaliar(C.p.token, 2, "<b>demorou</b>");
+j = await (await acomp(A.p.token, { ip: "20.0.0.9" })).json(); ok(j.avaliacao.nota === 4 && j.avaliacao.comentou === true && !JSON.stringify(j).includes("demorou"), "cada token só vê a própria avaliação");
+AV = await (await req("GET", "/admin/avaliacoes", null, K)).json();
+ok(AV.total === 2 && AV.media === 3 && AV.dist[2] === 1 && AV.dist[4] === 1 && AV.google.includes("writereview"), "média, distribuição e link no painel");
+ok((await req("GET", "/admin/avaliacoes")).status === 401, "lista de avaliações exige senha");
+db.prepare("UPDATE acompanhamento SET retirado_em = ? WHERE pedido_id = ?").run(new Date(Date.now() - 40 * 86400e3).toISOString(), C.p.id);
+r = await avaliar(C.p.token, 5); ok(r.status === 409, "pedido muito antigo não recebe avaliação");
+let limAv = 0; for (let i = 0; i < 22; i++) { r = await avaliar(novoToken(), 5, undefined, { ip: "61.0.0.1" }); if (r.status === 429) limAv++; }
+ok(limAv === 2, "limite de tentativas de avaliação por aparelho");
+
+/* ---------- baixa de meia a meia ---------- */
+const MZ = await novoPed({ fid: false, tel: "", itens: [{ id: "margherita", meia: "diavola", qtd: 2 }] });
+const f0 = (await est(fior)).quantidade;
+await req("POST", "/admin/pedido/status", { id: MZ.p.id, status: "retirado" }, K);
+ok(r3t((await est(fior)).quantidade) === r3t(f0 - 0.12 * 0.5 * 2), "meia a meia baixa metade da ficha de cada sabor");
+function r3t(n) { return Math.round(n * 1000) / 1000; }

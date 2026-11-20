@@ -371,6 +371,64 @@ footer .credit:hover,footer .credit:focus-visible{color:var(--ink,#2b1a14)}
 .err:empty{display:none}
 .hint{font-size:12.5px;color:var(--muted);text-align:center;margin:10px 0 0}
 
+/* ---------- pedir de novo ---------- */
+.again{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:10px 8px 10px 16px;border-radius:8px;background:var(--card);box-shadow:0 0 0 1px var(--line)}
+.again[hidden]{display:none}
+.again .t{flex:1;min-width:0;font-size:14.5px;line-height:1.4}
+.again .t small{display:block;color:var(--muted);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
+.again .t span{overflow-wrap:anywhere}
+.again .btn{height:42px;padding:0 16px;font-size:14.5px;flex:none}
+.again .x{flex:none;width:40px;height:40px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:22px;line-height:1;cursor:pointer}
+@media (hover:hover){.again .x:hover{background:var(--bg-2);color:var(--ink)}}
+.drawer .again{margin:4px 0 18px}
+
+/* ---------- calculadora para grupos ---------- */
+.grupo{margin-top:22px;border-radius:8px;background:var(--card);box-shadow:0 0 0 1px var(--line)}
+.grupo summary{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;list-style:none;font:400 24px/1.15 var(--serif)}
+.grupo summary::-webkit-details-marker{display:none}
+.grupo summary small{display:block;font:400 14px/1.4 var(--sans);color:var(--muted)}
+.grupo summary::after{content:"+";margin-left:auto;font:400 26px/1 var(--sans);color:var(--wine);transition:transform .2s var(--ease)}
+.grupo[open] summary::after{transform:rotate(45deg)}
+.grupo .gb{display:grid;gap:16px;padding:2px 18px 20px}
+.grow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.grow > span{font-size:14.5px;font-weight:500}
+.grow .stepper output{min-width:36px;font-size:18px}
+.fome{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:8px;background:var(--bg-2);width:100%;border:0;margin:0}
+.fome legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.fome input{position:absolute;opacity:0;width:1px;height:1px}
+.fome span{display:grid;place-items:center;min-height:44px;border-radius:6px;font-size:14.5px;font-weight:500;color:var(--muted);cursor:pointer;text-align:center;line-height:1.2;padding:4px}
+.fome input:checked+span{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.fome input:focus-visible+span{outline:2px solid var(--wine);outline-offset:1px}
+.gres{display:grid;gap:10px;padding:16px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--line)}
+.gres .n{margin:0;font-size:15px;color:var(--muted)}
+.gres .n b{font:400 44px/1 var(--serif);color:var(--wine);margin-right:6px;vertical-align:-4px}
+.gres ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.gres li{display:flex;align-items:center;gap:10px;font-size:15px}
+.gres li img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+.gres li b{min-width:26px;font-variant-numeric:tabular-nums}
+.gres li span:last-child{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums;font-size:14px}
+.gres .warn{margin:0;font-size:13.5px;color:var(--wine)}
+.gres .warn:empty{display:none}
+.grule{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+.gb .btn{width:100%}
+
+/* ---------- massas do dia (o número vem do painel) ---------- */
+.massas{display:inline-flex;align-items:center;gap:10px;margin:0 0 16px;padding:7px 15px 7px 8px;border-radius:999px;background:var(--card);box-shadow:0 0 0 1px var(--line);font-size:14.5px;line-height:1.3;color:var(--ink);font-variant-numeric:tabular-nums}
+.massas[hidden]{display:none}
+.massas i{flex:none;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 36% 32%,#FFFBF3 0 22%,#F1E2C9 60%,#E2CBA6);box-shadow:inset 0 -2px 0 rgba(108,22,3,.14),0 1px 2px rgba(60,20,8,.18)}
+.massas b{color:var(--wine);font-weight:600}
+.massas.low{box-shadow:0 0 0 1.5px var(--wine)}
+.massas.out{background:#2B1A12;color:var(--cream);box-shadow:none}
+.massas.out i{filter:grayscale(1);opacity:.45}
+.sec-head .massas{margin:0 0 14px;justify-self:start}
+.dfoot .massas{display:flex;margin:0 0 12px;border-radius:8px;padding:9px 14px 9px 10px;font-size:14px}
+.dfoot .massas[hidden]{display:none}
+.aviso-pedido{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 18px;background:var(--cream);color:var(--ink);font-size:14.5px;text-decoration:none;box-shadow:inset 0 -1px 0 var(--line)}
+.aviso-pedido[hidden]{display:none}
+.aviso-pedido b{font-weight:600}
+.aviso-pedido span{color:var(--wine);font-weight:600;white-space:nowrap}
+.aviso-pedido .dot{background:#E07B39;box-shadow:0 0 0 3px rgba(224,123,57,.22)}
+
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before{transition-duration:.01ms!important;animation:none!important}
@@ -380,6 +438,7 @@ footer .credit:hover,footer .credit:focus-visible{color:var(--ink,#2b1a14)}
 <body>
 
 <div class="aviso-loja" id="avisoLoja" role="status" hidden></div>
+<a class="aviso-pedido" id="avisoPedido" href="#" hidden></a>
 <div class="topline">
   <div class="wrap">
     <span class="status" data-status><span class="dot"></span>Ter a dom · 18h às 23h</span>
@@ -433,7 +492,7 @@ footer .credit:hover,footer .credit:focus-visible{color:var(--ink,#2b1a14)}
     <div class="wrap">
       <div class="sec-head">
         <h2>Cardápio</h2>
-        <div><p style="margin:0 0 14px">Seis pizzas, todas com 30 cm e 6 pedaços. Toque numa pizza para ver de perto, escolher a quantidade e deixar uma observação.</p><button type="button" class="feed-cta" data-open-feed><i>▶</i>Ver em modo feed e curtir</button></div>
+        <div><p class="massas" data-massas role="status" hidden></p><div class="again" data-again hidden></div><p style="margin:0 0 14px">Seis pizzas, todas com 30 cm e 6 pedaços. Toque numa pizza para ver de perto, escolher a quantidade e deixar uma observação.</p><button type="button" class="feed-cta" data-open-feed><i>▶</i>Ver em modo feed e curtir</button></div>
       </div>
       <button type="button" class="m-plate" id="mPlate" aria-label="Ver a Margherita de perto"><span class="m-dish"><img id="mPlateImg" src="img/lg/margherita.jpg" alt="" width="901" height="901"></span></button>
       <div class="menu">
@@ -452,6 +511,21 @@ footer .credit:hover,footer .credit:focus-visible{color:var(--ink,#2b1a14)}
         <div>
           <ol class="list" id="list"></ol>
           <p class="list-note">Pagamento na retirada: Pix, cartão ou dinheiro.</p>
+          <details class="grupo" id="grupo">
+            <summary><span>Quantas pizzas para o seu grupo?<small>Diga quantas pessoas e a fome: a gente sugere a quantidade e os sabores.</small></span></summary>
+            <div class="gb">
+              <div class="grow"><span id="gPesLbl">Pessoas</span>
+                <span class="stepper"><button type="button" id="gMenos" aria-label="Menos uma pessoa">−</button><output id="gPes" aria-labelledby="gPesLbl" aria-live="polite">4</output><button type="button" id="gMais" aria-label="Mais uma pessoa">+</button></span></div>
+              <fieldset class="fome"><legend>Fome do grupo</legend>
+                <label><input type="radio" name="fome" value="leve"><span>Leve</span></label>
+                <label><input type="radio" name="fome" value="normal" checked><span>Normal</span></label>
+                <label><input type="radio" name="fome" value="esfomeados"><span>Esfomeados</span></label>
+              </fieldset>
+              <div class="gres" aria-live="polite"><p class="n" id="gN"></p><ul id="gSab"></ul><p class="warn" id="gWarn"></p></div>
+              <p class="grule" id="gRegra"></p>
+              <button class="btn btn-wine" type="button" id="gAdd">Colocar no pedido</button>
+            </div>
+          </details>
         </div>
       </div>
     </div>
@@ -601,6 +675,7 @@ footer .credit:hover,footer .credit:focus-visible{color:var(--ink,#2b1a14)}
     </form>
   </div>
   <div class="dfoot">
+    <p class="massas" data-massas hidden></p>
     <div class="total"><span>Total</span><b data-total>R$ 0,00</b></div>
     <p class="err" id="err" role="alert"></p>
     <div class="paynow" id="payNow" hidden><p>Pedido enviado no WhatsApp. Agora é só pagar:</p><button class="btn btn-wine" type="button" id="payBtn"></button></div>
@@ -627,6 +702,8 @@ const CONFIG = {
   // CARTÃO FIDELIDADE (confirmar as regras com a Balcão)
   loyaltyGoal: 10,                       // pedidos para ganhar
   loyaltyPrize: "1 pizza grátis",        // o que ganha
+  // CALCULADORA PARA GRUPOS: pizzas de 30 cm com 6 pedaços. Quantas pizzas por pessoa em cada fome.
+  grupo: { pedacos: 6, fome: { leve: 0.5, normal: 0.75, esfomeados: 1 }, maxSabores: 4 },
   // PAINEL DE PEDIDOS E SELOS (pasta painel-api). Endereço do servidor; vazio = desligado (pedido só no WhatsApp).
   panelApi: "",
   // PAGAMENTO ONLINE (desligado). Veja PAGAMENTO.md para ligar.
@@ -703,16 +780,40 @@ function nextOpen(){ const n=spNow(); for(let i=0;i<8;i++){ const d=(n.dow+i)%7;
 
 /* ---------- loja fechada pelo painel (o admin liga e desliga lá, sem mexer no código) ---------- */
 let LOJA_FECHADA = false;
-if(CONFIG.panelApi) fetch(CONFIG.panelApi + "/status").then(r => r.ok ? r.json() : null).then(j => {
+const API = (CONFIG.panelApi || "").replace(/\/$/,"");
+const SEND_TXT = () => $("#send").lastChild;
+const SEND_ORIG = SEND_TXT().textContent;
+function lerStatus(){ return API ? fetch(API + "/status").then(r => r.ok ? r.json() : null).then(j => { if(j){ MASSAS = j.massas ? j.massas.restam : null; massasUI(); } return j; }).catch(() => null) : Promise.resolve(null); }
+if(API) lerStatus().then(j => {
   if(!j || !j.fechado) return;
-  LOJA_FECHADA = true;
+  LOJA_FECHADA = true; massasUI();
   const ate = j.ate ? (j.ate === new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo"}).format(new Date()) ? "hoje" : "até " + j.ate.split("-").reverse().slice(0,2).join("/")) : "por enquanto";
   const motivo = j.motivo ? " " + (/[.!?…]$/.test(j.motivo) ? j.motivo : j.motivo + ".") : "";
   const aviso = $("#avisoLoja"); aviso.innerHTML = `<b>Não estamos recebendo pedidos ${ate}.</b>`; aviso.append(motivo); aviso.hidden = false;
   $("[data-status]").innerHTML = `<span class="dot"></span>Fechado ${ate}`;
   $("[data-closed-note]").textContent = `Não estamos recebendo pedidos ${ate}.${motivo}`;
   const b = $("#send"); b.disabled = true; b.lastChild.textContent = " Pedidos pausados";
-}).catch(() => {});
+});
+
+/* ---------- massas do dia: a loja informa no painel quantas fez; o número vem do servidor ---------- */
+let MASSAS = null;                                     // quantas restam hoje (null = a loja não está contando)
+const livres = () => MASSAS === null ? Infinity : MASSAS - totals().qty;
+function massasUI(){
+  const show = MASSAS !== null && !LOJA_FECHADA && isOpen();
+  $$("[data-massas]").forEach(el => { el.hidden = !show; if(!show) return;
+    el.classList.toggle("out", MASSAS === 0); el.classList.toggle("low", MASSAS > 0 && MASSAS <= 5);
+    el.innerHTML = MASSAS === 0 ? `<i aria-hidden="true"></i>As massas de hoje acabaram.`
+      : `<i aria-hidden="true"></i><span>Restam <b>${MASSAS}</b> massa${MASSAS > 1 ? "s" : ""} hoje</span>`; });
+  window.grupoUI && grupoUI(); againUI();
+  if(LOJA_FECHADA) return;
+  const b = $("#send"), fim = MASSAS === 0, note = $("[data-closed-note]");
+  b.disabled = fim; SEND_TXT().textContent = fim ? " As massas de hoje acabaram" : SEND_ORIG;
+  if(fim){ if(!note.dataset.orig) note.dataset.orig = note.textContent || " "; note.textContent = "As massas de hoje acabaram. Amanhã tem mais, com 48 horas de fermentação."; }
+  else if(note.dataset.orig){ note.textContent = note.dataset.orig.trim(); delete note.dataset.orig; }
+  render();
+}
+// confere de novo de tempos em tempos (só com a aba à vista) e sempre que o pedido é aberto
+if(API) setInterval(() => { if(!document.hidden) lerStatus(); }, 60000);
 
 /* ---------- carrinho ---------- */
 let cart = JSON.parse(sessionStorage.getItem("balcao-cart-v2")||"[]"); // [{id, note, qty}]
@@ -720,11 +821,15 @@ cart = cart.filter(l => byId(l.id));
 const save = () => sessionStorage.setItem("balcao-cart-v2", JSON.stringify(cart));
 const qtyOf = id => cart.filter(l=>l.id===id).reduce((a,l)=>a+l.qty,0);
 const totals = () => cart.reduce((t,l)=>({qty:t.qty+l.qty, sum:t.sum+l.qty*byId(l.id).price}),{qty:0,sum:0});
-function addToCart(id, n, note){
+function semMassa(){ toast(MASSAS === 0 ? "As massas de hoje acabaram" : `Seu pedido já usa as ${MASSAS} massas que restam hoje`); }
+function addToCart(id, n, note, quiet){
   note = (note||"").trim();
+  const l = livres(); if(l <= 0){ if(!quiet) semMassa(); return 0; }
+  if(n > l){ n = l; if(!quiet) setTimeout(() => toast(`Restam só ${MASSAS} massas hoje: ${n}× ${byId(id).name} no pedido`), 1900); }
   const line = cart.find(l=>l.id===id && l.note===note);
   line ? line.qty += n : cart.push({id,note,qty:n});
-  render(); bump(); toast(`${n}× ${byId(id).name} no pedido`);
+  if(quiet) return n;
+  render(); bump(); toast(`${n}× ${byId(id).name} no pedido`); return n;
 }
 
 /* ---------- lista ---------- */
@@ -814,7 +919,7 @@ function updateAdd(){
   $("#addBtn").textContent = `Adicionar · ${brl(qty*byId(current).price)}`;
 }
 $("#qMinus").onclick = () => { if(qty>1){ qty--; updateAdd(); } };
-$("#qPlus").onclick  = () => { if(qty<20){ qty++; updateAdd(); } };
+$("#qPlus").onclick  = () => { if(qty >= livres()) return semMassa(); if(qty<20){ qty++; updateAdd(); } };
 $("#stageNote").addEventListener("keydown", e => { if(e.key==="Enter") $("#addBtn").click(); });
 $("#addBtn").onclick = () => { addToCart(current, qty, $("#stageNote").value); qty=1; $("#stageNote").value=""; updateAdd(); if(mobile()) closeStage(); };
 
@@ -845,7 +950,7 @@ const scrim=$("#scrim"), stage=$("#stage"), drawer=$("#drawer"); let lastFocus;
 const lock = on => document.documentElement.style.overflow = on ? "hidden" : "";
 function openStage(){ lastFocus=document.activeElement; stage.classList.add("open"); scrim.classList.add("open"); lock(true); }
 function closeStage(){ if(!stage.classList.contains("open")) return; stage.classList.remove("open"); if(!drawer.classList.contains("open")){ scrim.classList.remove("open"); lock(false); } lastFocus&&lastFocus.focus&&lastFocus.focus({preventScroll:true}); }
-function openCart(){ closeStage(); lastFocus=document.activeElement; drawer.classList.add("open"); drawer.removeAttribute("inert"); scrim.classList.add("open"); lock(true); setTimeout(()=>$("[data-close-cart]").focus(),60); }
+function openCart(){ lerStatus(); closeStage(); lastFocus=document.activeElement; drawer.classList.add("open"); drawer.removeAttribute("inert"); scrim.classList.add("open"); lock(true); setTimeout(()=>$("[data-close-cart]").focus(),60); }
 function closeCart(){ drawer.classList.remove("open"); drawer.setAttribute("inert",""); scrim.classList.remove("open"); lock(false); lastFocus&&lastFocus.focus&&lastFocus.focus({preventScroll:true}); }
 $("[data-close-stage]").onclick = closeStage;
 $("[data-close-cart]").onclick = closeCart;
@@ -863,21 +968,90 @@ function render(){
   $("[data-bar-qty]").textContent = q===1 ? "1 pizza" : q+" pizzas";
   $("[data-bar-total]").textContent = brl(sum);
   $("#bar").classList.toggle("show", q>0);
+  const sobra = MASSAS === null ? 0 : q - MASSAS;
+  if(sobra > 0 && MASSAS > 0) $("#err").textContent = `Restam só ${MASSAS} massa${MASSAS>1?"s":""} hoje. Tire ${sobra} pizza${sobra>1?"s":""} do pedido.`;
+  else if($("#err").textContent.startsWith("Restam só")) $("#err").textContent = "";
   MENU.forEach(p => { const el=$(`[data-q="${p.id}"]`), n=qtyOf(p.id); el.hidden=!n; el.textContent=n; });
   $("#lines").innerHTML = cart.length ? cart.map((l,i)=>{ const p=byId(l.id); return `
     <div class="line"><img src="${img(p.id)}" alt="">
       <div><b>${p.name}</b>${l.note?`<em>${esc(l.note)}</em>`:""}<small>${l.qty} × ${brl(p.price)}</small></div>
       <span class="stepper"><button type="button" data-dec="${i}" aria-label="Remover uma ${p.name}">−</button><output>${l.qty}</output><button type="button" data-inc="${i}" aria-label="Adicionar mais uma ${p.name}">+</button></span>
     </div>`; }).join("")
-    : `<div class="empty">Seu pedido está vazio.<br><button class="btn btn-line" type="button" data-go-menu>Ver o cardápio</button></div>`;
+    : `<div class="again" data-again hidden></div><div class="empty">Seu pedido está vazio.<br><button class="btn btn-line" type="button" data-go-menu>Ver o cardápio</button></div>`;
+  againUI();
 }
 $("#lines").addEventListener("click", e => {
   const inc=e.target.closest("[data-inc]"), dec=e.target.closest("[data-dec]");
+  if(inc && livres() <= 0) return semMassa();
   if(inc){ cart[+inc.dataset.inc].qty++; render(); $(`[data-inc="${inc.dataset.inc}"]`)?.focus(); }
   if(dec){ const i=+dec.dataset.dec; cart[i].qty--; if(cart[i].qty<=0){ cart.splice(i,1); render(); $("[data-close-cart]").focus(); } else { render(); $(`[data-dec="${i}"]`)?.focus(); } }
   if(e.target.closest("[data-go-menu]")){ closeCart(); document.getElementById("cardapio").scrollIntoView(); }
 });
 function bump(){ $$("[data-count]").forEach(el=>{ el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }); }
+/* ---------- pedir de novo (o último pedido fica só neste aparelho) ---------- */
+function ultimo(){ try{ const u = JSON.parse(localStorage.getItem("balcao-ultimo") || "null"); return u && Array.isArray(u.itens) && u.itens.length ? u : null; }catch(e){ return null; } }
+function againUI(){
+  const u = ultimo(), show = !!u && !cart.length && !LOJA_FECHADA && MASSAS !== 0;   // sem como pedir agora, o cartão some
+  $$("[data-again]").forEach(el => { el.hidden = !show; if(!show) return;
+    const ok = u.itens.filter(i => byId(i.id)), sum = ok.reduce((s, i) => s + i.qty * byId(i.id).price, 0);
+    const txt = ok.map(i => `${i.qty} ${byId(i.id).name}`).join(" + ") || "sabores que saíram do cardápio";
+    el.innerHTML = `<div class="t"><small>Pedir de novo</small><span>${esc(txt)}${ok.length ? ` · <b class="num">${brl(sum)}</b>` : ""}</span></div>
+      <button class="btn btn-wine" type="button" data-again-go>Repetir</button><button class="x" type="button" data-again-x aria-label="Esquecer o último pedido">×</button>`; });
+}
+document.addEventListener("click", e => {
+  if(e.target.closest("[data-again-x]")){ try{ localStorage.removeItem("balcao-ultimo"); }catch(x){} againUI(); toast("Pronto, esquecemos o último pedido"); return; }
+  if(!e.target.closest("[data-again-go]")) return;
+  if(LOJA_FECHADA) return toast("Não estamos recebendo pedidos agora");
+  const u = ultimo(); if(!u) return;
+  const fora = u.itens.filter(i => !byId(i.id)).map(i => i.id.replace(/-/g, " "));
+  let pedidas = 0, postas = 0;
+  u.itens.filter(i => byId(i.id)).forEach(i => { pedidas += i.qty; postas += addToCart(i.id, Math.max(1, Math.min(20, +i.qty || 1)), i.note, true); });
+  const f = $("#form"); if(u.nome && !f.nome.value) f.nome.value = u.nome;
+  render(); bump();
+  const avisos = [fora.length ? `${fora.join(", ")} saiu do cardápio` : "", postas < pedidas ? (MASSAS === 0 ? "as massas de hoje acabaram" : `restam só ${MASSAS} massas hoje`) : ""].filter(Boolean);
+  if(!postas) return toast(avisos.length ? "Não deu para repetir: " + avisos.join(" e ") : "Não deu para repetir o pedido");
+  toast(avisos.length ? `Colocamos ${postas} pizza${postas>1?"s":""} (${avisos.join("; ")})` : `Pedido repetido com os preços de hoje: ${postas} pizza${postas>1?"s":""}`);
+  openCart();
+});
+
+/* ---------- calculadora para grupos ---------- */
+let rankLikes = () => [];                           // preenchido pelo modo feed (curtidas do ranking)
+(function(){
+  const G = CONFIG.grupo, pes = $("#gPes"); let n = 4;
+  const fome = () => (document.querySelector("#grupo input[name=fome]:checked") || {}).value || "normal";
+  const sabores = () => {                            // mais curtidos primeiro; sem curtidas, os destaques do cardápio
+    const likes = Object.fromEntries(rankLikes().map(x => [x.id, x.c]));
+    return MENU.map((p, i) => ({ id: p.id, k: (likes[p.id] || 0) * 10 + (p.tags.length ? 1 : 0), i })).sort((a, b) => b.k - a.k || a.i - b.i).map(x => x.id);
+  };
+  function plano(){
+    const quer = Math.max(1, Math.ceil(n * G.fome[fome()] - 1e-9)), l = livres(), qtd = Math.max(0, Math.min(quer, l));
+    const top = sabores().slice(0, Math.min(G.maxSabores, qtd)), m = new Map();
+    for(let k = 0; k < qtd; k++) m.set(top[k % top.length], (m.get(top[k % top.length]) || 0) + 1);
+    return { quer, qtd, itens: [...m] };
+  }
+  function draw(){
+    pes.textContent = n; $("#gMenos").disabled = n <= 1; $("#gMais").disabled = n >= 40;
+    const p = plano(), f = fome(), por = G.fome[f], ped = Math.round(por * G.pedacos * 10) / 10;
+    $("#gN").innerHTML = `<b>${p.quer}</b>pizza${p.quer > 1 ? "s" : ""} para ${n} pessoa${n > 1 ? "s" : ""}`;
+    $("#gSab").innerHTML = p.itens.map(([id, q]) => `<li><img src="${img(id)}" alt=""><b>${q}×</b><span>${byId(id).name}</span><span>${brl(q * byId(id).price)}</span></li>`).join("");
+    $("#gWarn").textContent = p.qtd < p.quer ? (p.qtd ? `Restam só ${MASSAS} massas hoje: dá para pedir ${p.qtd} agora.` : "As massas de hoje acabaram.") : "";
+    $("#gRegra").textContent = `Como calculamos: cada pizza tem 30 cm e ${G.pedacos} pedaços. Fome leve ≈ ${String(G.fome.leve).replace(".", ",")} pizza por pessoa, normal ≈ ${String(G.fome.normal).replace(".", ",")}, esfomeados ≈ ${G.fome.esfomeados}. Arredondamos para cima (${String(ped).replace(".", ",")} pedaços por pessoa nesta fome). Os sabores vêm dos mais curtidos no site; dá para trocar depois no pedido.`;
+    $("#gAdd").disabled = !p.qtd || LOJA_FECHADA;
+    $("#gAdd").textContent = p.qtd ? `Colocar ${p.qtd} pizza${p.qtd > 1 ? "s" : ""} no pedido · ${brl(p.itens.reduce((s, [id, q]) => s + q * byId(id).price, 0))}` : "Colocar no pedido";
+  }
+  $("#gMenos").onclick = () => { if(n > 1){ n--; draw(); } };
+  $("#gMais").onclick = () => { if(n < 40){ n++; draw(); } };
+  $("#grupo").addEventListener("change", draw);
+  $("#grupo").addEventListener("toggle", draw);
+  $("#gAdd").onclick = () => {
+    if(LOJA_FECHADA) return toast("Não estamos recebendo pedidos agora");
+    const p = plano(); let postas = 0; p.itens.forEach(([id, q]) => postas += addToCart(id, q, "", true));
+    if(!postas) return semMassa();
+    render(); bump(); toast(`${postas} pizza${postas > 1 ? "s" : ""} no pedido. Dá para trocar os sabores no pedido.`); openCart();
+  };
+  window.grupoUI = draw; draw();
+})();
+
 /* ---------- sugestão de sabor ---------- */
 (()=>{
   const f=$("#ideaForm"); if(!f) return;
@@ -904,11 +1078,13 @@ $("#send").onclick = () => {
   if(LOJA_FECHADA) return err.textContent="Não estamos recebendo pedidos agora.";
   if(!q) return err.textContent="Adicione pelo menos uma pizza.";
   if(sum<CONFIG.minOrder) return err.textContent="Pedido mínimo de "+brl(CONFIG.minOrder)+".";
+  if(MASSAS !== null && q > MASSAS) return err.textContent = MASSAS ? `Restam só ${MASSAS} massa${MASSAS>1?"s":""} hoje. Tire ${q-MASSAS} pizza${q-MASSAS>1?"s":""} do pedido.` : "As massas de hoje acabaram.";
   if(!nome){ err.textContent="Digite seu nome."; return f.nome.focus(); }
   const panel = !!CONFIG.panelApi, tel = panel && f.fid.checked ? telDigits(f.tel.value) : "";
   if(panel && f.fid.checked && !tel){ err.textContent="Digite o celular com DDD para marcar o selo."; return f.tel.focus(); }
   const online = PAY.on && f.pagamento.value === PAY.opt;
   const id = (panel || online) ? orderId() : null;
+  const token = panel ? newToken() : null, track = token ? trackUrl(token) : null;
   const lines = cart.map(l=>{ const p=byId(l.id); return `• ${l.qty}x ${p.name} — ${brl(l.qty*p.price)}${l.note?`\n   _${l.note}_`:""}`; });
   const msg = [
     "*Pedido para retirada — Balcão Pizza Napoletana*", "",
@@ -920,14 +1096,47 @@ $("#send").onclick = () => {
     online ? `*Pagamento:* online` : `*Pagamento na retirada:* ${f.pagamento.value}`,
     f.obs.value.trim() ? `*Obs.:* ${f.obs.value.trim()}` : null,
     f.fid.checked ? (tel ? `*Cartão fidelidade:* marcar selo no ${telPretty(tel)}` : `*Cartão fidelidade:* marcar selo neste número`) : null,
-    "", "Pedido feito pelo site."
+    "", "Pedido feito pelo site.",
+    track ? `Acompanhe o pedido ao vivo: ${track}` : null
   ].filter(l=>l!==null).join("\n");
-  const order = { id, total: sum, nome, tel, fid: f.fid.checked, pagamento: online ? "Online" : f.pagamento.value, obs: f.obs.value.trim(),
+  const order = { id, token, total: sum, nome, tel, fid: f.fid.checked, pagamento: online ? "Online" : f.pagamento.value, obs: f.obs.value.trim(),
     itens: cart.map(l=>({id:l.id, nome:byId(l.id).name, qtd:l.qty, preco:byId(l.id).price, obs:l.note||""})), retirada: f.horario.value || "o quanto antes" };
   window.open(waBase+"?text="+encodeURIComponent(msg),"_blank","noopener");
-  if(panel){ try{ fetch(CONFIG.panelApi.replace(/\/$/,"")+"/pedido",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify(order)}).catch(()=>{}); }catch(e){} }
+  try{ localStorage.setItem("balcao-ultimo", JSON.stringify({ at: Date.now(), nome, itens: cart.map(l => ({ id:l.id, ...(l.meia ? { meia:l.meia } : {}), qty:l.qty, note:l.note||"" })) })); }catch(e){}
   if(online){ PAY.pending = order; $("#payBtn").textContent = `Pagar ${brl(sum)} agora`; $("#payNow").hidden = false; }
+  if(panel) registrar(order, msg, online);
 };
+/* registra no painel e leva o cliente para a página "Sua pizza está no forno" */
+async function registrar(order, msg, online){
+  const b = $("#send"); b.disabled = true;
+  try{
+    const r = await fetch(API+"/pedido",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify(order)});
+    const j = await r.json().catch(()=>({}));
+    if(r.status === 409 && j.massas){ MASSAS = j.massas.restam; massasUI(); $("#err").textContent = `${j.error} O pedido não entrou no sistema; a gente responde você no WhatsApp.`; return; }
+    if(!r.ok || !j.token) return;
+    try{ localStorage.setItem("balcao-acomp", JSON.stringify({ t:j.token, n:j.numero, at:Date.now() })); sessionStorage.setItem("balcao-wa-msg", msg); }catch(e){}
+    cart = []; render();
+    const url = trackUrl(j.token) + "&novo=1";
+    if(online){ const a = document.createElement("a"); a.href = url; a.className = "btn btn-line"; a.textContent = "Acompanhar o pedido"; $("#payNow").append(a); return; }
+    location.href = url;
+  }catch(e){}
+  finally{ if(!LOJA_FECHADA && MASSAS !== 0) b.disabled = false; }
+}
+function newToken(){ try{ const b = crypto.getRandomValues(new Uint8Array(16)); return btoa(String.fromCharCode(...b)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }catch(e){ return null; } }
+function trackUrl(t){ return new URL("acompanhar/?t=" + t, location.href.split(/[?#]/)[0].replace(/[^/]*$/, "")).href; }
+/* voltou ao site com um pedido aberto: mostra onde ele está */
+(function(){
+  if(!API) return; let o; try{ o = JSON.parse(localStorage.getItem("balcao-acomp") || "null"); }catch(e){}
+  if(!o || !o.t || Date.now() - o.at > 36e5 * 30) return;
+  fetch(API + "/acompanhar?t=" + encodeURIComponent(o.t)).then(r => r.ok ? r.json() : null).then(j => {
+    if(!j) return; const a = $("#avisoPedido"), ET = { novo:"recebido", preparo:"com a massa aberta", forno:"no forno", pronto:"pronto para retirar" };
+    a.href = trackUrl(o.t);
+    if(ET[j.etapa]) a.innerHTML = `<i class="dot" aria-hidden="true"></i><b>Seu pedido nº ${j.numero} está ${ET[j.etapa]}.</b><span>Acompanhar →</span>`;
+    else if(j.etapa === "retirado" && j.avaliacao && j.avaliacao.aberta && !j.avaliacao.nota && Date.now() >= Date.parse(j.avaliacao.desde)) a.innerHTML = `<b>Como estava a pizza, ${esc(j.nome)}?</b><span>Avaliar →</span>`;
+    else return;
+    a.hidden = false;
+  }).catch(() => {});
+})();
 function telDigits(v){ let d=String(v||"").replace(/\D/g,""); if(d.length>11&&d.startsWith("55")) d=d.slice(2); return /^[1-9]{2}9?\d{8}$/.test(d)?d:""; }
 function telPretty(t){ return `(${t.slice(0,2)}) ${t.slice(2,t.length-4)}-${t.slice(-4)}`; }
 if(CONFIG.panelApi){
@@ -978,6 +1187,7 @@ if(new URLSearchParams(location.search).get("pagamento")==="ok" && CONFIG.paymen
   let allP; const wGet=()=>(allP=allP||fetch(`${LIKES_WORKER}/counts?site=balcao`).then(r=>r.ok?r.json():Promise.reject()).then(j=>j.counts||{}));
 const api=(op,id)=> LIKES_WORKER ? (op==="get" ? wGet().then(c=>c[id]||0) : fetch(`${LIKES_WORKER}/like`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({site:"balcao",item:id,uid:UID,on:op==="hit"})}).then(r=>r.ok?r.json():Promise.reject()).then(j=>+j.count||0)) : fetch(`${LIKES_API}/${op}/${NS}/${id}`).then(r=>r.status===404?{value:0}:r.ok?r.json():Promise.reject()).then(j=>+j.value||0);
   const shown=id=>apiOk?Math.max(counts[id]||0,mine.has(id)?1:0):(mine.has(id)?1:0);
+  rankLikes = () => MENU.map(p => ({ id: p.id, c: shown(p.id) }));
   const feed=$("#feed"), reel=$("#reel"); let cur=0, lastF;
   reel.innerHTML = MENU.map((p,i)=>`<section class="slide" data-i="${i}" aria-label="${p.name}, ${i+1} de ${MENU.length}">
     <div class="pz"><div class="pz-in"><div class="plate2"></div><img class="ph" src="${img(p.id,"lg")}" alt="Pizza ${p.name}" loading="${i<2?"eager":"lazy"}" draggable="false"></div></div>
@@ -989,7 +1199,7 @@ const api=(op,id)=> LIKES_WORKER ? (op==="get" ? wGet().then(c=>c[id]||0) : fetc
       <button type="button" data-share="${p.id}" aria-label="Compartilhar ${p.name}"><span class="b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/></svg></span>Enviar</button>
     </div></section>`).join("");
   const upd=id=>{ $$(`[data-like="${id}"]`).forEach(b=>b.setAttribute("aria-pressed",mine.has(id))); $$(`[data-n="${id}"]`).forEach(n=>n.textContent=shown(id)); };
-  MENU.forEach(p=>api("get",p.id).then(v=>{counts[p.id]=v; upd(p.id);}).catch(()=>{ apiOk=false; MENU.forEach(q=>upd(q.id)); }));
+  MENU.forEach(p=>api("get",p.id).then(v=>{counts[p.id]=v; upd(p.id); window.grupoUI&&grupoUI();}).catch(()=>{ apiOk=false; MENU.forEach(q=>upd(q.id)); }));
   function like(id,force){ const prev=mine.has(id), on=force??!prev; on?mine.add(id):mine.delete(id); localStorage.setItem("balcao-likes",JSON.stringify([...mine]));
     if(LIKES_WORKER){ if(apiOk&&prev!==on){ counts[id]=Math.max(0,(counts[id]||0)+(on?1:-1)); api(on?"hit":"unhit",id).then(v=>{counts[id]=v;upd(id);}).catch(()=>{}); } }
     else if(on&&apiOk&&!sent.has(id)){ sent.add(id); localStorage.setItem("balcao-likes-sent",JSON.stringify([...sent])); counts[id]=(counts[id]||0)+1; api("hit",id).then(v=>{counts[id]=v;upd(id);}).catch(()=>{}); }
