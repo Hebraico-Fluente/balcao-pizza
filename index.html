@@ -200,6 +200,9 @@ footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:2
 footer img{height:28px;width:auto}
 footer nav{display:flex;gap:20px}
 footer a{text-decoration:none}
+footer .credit{color:inherit;white-space:nowrap;border-bottom:1px solid currentColor;padding-bottom:1px;transition:color .2s}
+footer .credit b{font-weight:600}
+footer .credit:hover,footer .credit:focus-visible{color:var(--ink,#2b1a14)}
 @media (hover:hover){footer a:hover{color:var(--ink)}}
 
 
@@ -558,7 +561,7 @@ footer a{text-decoration:none}
       <a data-ig-link href="#" target="_blank" rel="noopener">Instagram</a>
       <a data-map-link href="#" target="_blank" rel="noopener">Mapa</a>
     </nav>
-    <span>© <span data-year></span> Balcão Pizza Napoletana</span>
+    <span class="foot-copy">© <span data-year></span> Balcão Pizza Napoletana · <a class="credit" href="https://guetastudio.com.br/?utm_source=balcao&amp;utm_medium=rodape" target="_blank" rel="noopener">Site feito por <b>Gueta Studio</b></a></span>
   </div>
 </footer>
 
