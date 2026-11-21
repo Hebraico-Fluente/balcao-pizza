@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Panfleto de sabores — Balcão Pizza Napoletana</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Panfleto A5 (148 × 210 mm) na identidade da Balcão (mesmas cores e fontes do site): faixa vinho com a pizza em
+   destaque sobre a tábua, carta dos outros sabores no papel creme. Preços e ingredientes = MENU de /index.html. */
+@page{size:148mm 210mm;margin:0}
+:root{--bg:#F3EDE3;--bg2:#EAE1D3;--card:#FBF8F3;--ink:#1E1611;--muted:#6E6259;--line:rgba(30,22,17,.14);--wine:#6C1603;--wine2:#86240E;--cream:#F3E6D6;
+  --serif:"Instrument Serif",Georgia,serif;--sans:"Inter",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#cfc6b8}
+body{font-family:var(--sans);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.mono{text-transform:uppercase;letter-spacing:.16em;font-weight:600}
+.wrap{display:flex;justify-content:center;padding:20px 0}
+@media print{html,body{background:none}.wrap{padding:0}}
+.sheet{width:148mm;height:210mm;position:relative;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
+@media screen{.sheet{box-shadow:0 14px 50px rgba(0,0,0,.3)}}
+
+/* faixa vinho */
+.top{flex:none;background:radial-gradient(120% 90% at 85% 70%,var(--wine2) 0%,var(--wine) 55%,#4E0F02 100%);color:var(--cream);padding:6mm 8mm 0;position:relative}
+.chips{display:flex;justify-content:center;gap:2mm}
+.chip{font-size:6.2pt;padding:1.5mm 3mm;border-radius:9mm;border:.3mm solid rgba(243,230,214,.4)}
+.chip.on{background:var(--cream);border-color:var(--cream);color:var(--wine)}
+h1{font-family:var(--serif);font-weight:400;font-size:36pt;line-height:.95;letter-spacing:-.01em;text-align:center;margin:3.2mm 0 1.2mm}
+h1 .hl{font-style:italic;color:#F7D9B5}
+.lead{text-align:center;color:rgba(243,230,214,.78);font-size:8pt;line-height:1.4}
+
+/* destaque: tábua de madeira */
+.hero{position:relative;height:60mm;margin:2mm -8mm 0;overflow:hidden}
+.board{position:absolute;width:96mm;height:96mm;right:-27mm;top:.5mm;border-radius:50%;
+  background:
+    radial-gradient(circle,transparent 58%,rgba(0,0,0,.28) 74%,rgba(0,0,0,.5) 100%),
+    repeating-linear-gradient(97deg,rgba(0,0,0,.0) 0 7mm,rgba(0,0,0,.16) 7mm 7.3mm,rgba(255,255,255,.04) 7.3mm 7.6mm),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 .5mm,transparent .5mm 2.1mm),
+    linear-gradient(160deg,#a06a43,#7c4a2a 45%,#5a321b);
+  box-shadow:0 6mm 18mm rgba(0,0,0,.45)}
+.arc{position:absolute;width:104mm;height:104mm;right:-31mm;top:-3.5mm}
+.arc text{font-family:var(--sans);font-size:4.6px;letter-spacing:2.4px;fill:rgba(243,230,214,.4);font-weight:600}
+.pizza{position:absolute;width:52mm;height:52mm;right:-5mm;top:6.5mm;border-radius:50%;overflow:hidden;box-shadow:0 4mm 10mm rgba(0,0,0,.5)}
+.pizza img{width:112%;height:112%;margin:-6%;display:block;object-fit:cover}
+.hero .txt{position:absolute;left:8mm;top:2.5mm;width:62mm;z-index:2}
+.count{display:flex;align-items:center;gap:2mm;font-size:5.8pt;color:#F7D9B5}
+.count i{display:block;width:9mm;height:.3mm;background:currentColor;opacity:.7}
+.hero h2{font-family:var(--serif);font-weight:400;font-size:31pt;line-height:.9;margin:1.4mm 0 1.8mm}
+.hero p{font-size:7.8pt;line-height:1.45;color:rgba(243,230,214,.9)}
+.pills{display:flex;flex-wrap:wrap;gap:1.2mm;margin-top:2.4mm}
+.pill{line-height:1.1;letter-spacing:.1em;font-size:5.2pt;padding:1.1mm 2mm;border-radius:9mm;border:.3mm solid rgba(243,230,214,.45)}
+.buy{display:flex;align-items:center;gap:3mm;margin-top:3.2mm}
+.price{font-family:var(--serif);font-size:24pt;line-height:1;white-space:nowrap}
+.price small{font-family:var(--sans);font-size:7pt;font-weight:600;margin-right:.8mm;opacity:.7;vertical-align:.5em}
+.btn{font-size:5.8pt;background:var(--cream);color:var(--wine);padding:1.9mm 3.2mm;border-radius:9mm;white-space:nowrap}
+.tag{position:absolute;right:5mm;top:53mm;z-index:2;font-size:5.4pt;color:var(--wine);background:var(--cream);padding:1.2mm 2.4mm;border-radius:9mm}
+.size{position:absolute;left:8mm;bottom:2mm;font-size:5.2pt;color:rgba(243,230,214,.6)}
+
+/* carta */
+.list{flex:none;margin:3.5mm 8mm 0}
+.list-head{display:flex;justify-content:space-between;align-items:baseline;font-size:5.8pt;color:var(--muted);padding-bottom:1.6mm;border-bottom:.3mm solid var(--ink)}
+.list-head b{font-family:var(--serif);font-weight:400;font-style:italic;font-size:13pt;letter-spacing:0;text-transform:none;color:var(--wine)}
+.row{display:grid;grid-template-columns:11.5mm 1fr auto;align-items:center;gap:3mm;padding:1.5mm 0;border-bottom:.3mm solid var(--line)}
+.thumb{width:11.5mm;height:11.5mm;border-radius:50%;overflow:hidden;box-shadow:0 1.2mm 2.5mm rgba(30,22,17,.3)}
+.thumb img{width:116%;height:116%;margin:-8%;display:block;object-fit:cover}
+.row .n{font-family:var(--sans);font-size:5.4pt;color:var(--wine);margin-right:.6mm;vertical-align:.3em}
+.row h3{font-family:var(--serif);font-weight:400;font-size:14pt;line-height:1;margin:0 0 1mm;display:flex;align-items:center;gap:1.6mm}
+.row h3 em{font-style:normal;font-family:var(--sans);font-size:4.8pt;letter-spacing:.14em;text-transform:uppercase;font-weight:600;padding:.6mm 1.5mm;border-radius:9mm;background:var(--bg2);color:var(--wine)}
+.row h3 em.hot{background:var(--wine);color:var(--cream)}
+.row .pills{margin-top:0;gap:.9mm}
+.row .pill{font-size:4.6pt;padding:.7mm 1.5mm;border-color:var(--line);color:var(--muted)}
+.row .price{font-size:17pt;color:var(--ink)}
+.row .price small{font-size:5.6pt}
+
+/* rodapé */
+.foot{flex:none;margin:auto 8mm 0;display:grid;grid-template-columns:auto 1fr auto;gap:4mm;align-items:center;padding:3mm 0 5mm}
+.qr{text-align:center}
+.qr img{width:17mm;height:17mm;display:block;background:#fff;padding:1.3mm;border-radius:1.6mm;border:.3mm solid var(--line)}
+.qr span{display:block;font-size:4.8pt;margin-top:1.2mm;color:var(--muted)}
+.info{text-align:center}
+.logo{height:10mm;display:block;margin:0 auto 1.4mm}
+.info b{display:block;font-family:var(--serif);font-weight:400;font-size:14pt;color:var(--wine)}
+.info .mono{display:block;font-size:5pt;color:var(--muted);margin-top:1mm;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+<article class="sheet">
+ <div class="top">
+  <div class="chips"><span class="chip on mono">Balcão</span><span class="chip mono">Pizza napoletana · Curitiba</span></div>
+
+  <h1>Qual vai ser <span class="hl">hoje?</span></h1>
+  <p class="lead">Seis sabores de massa napolitana, saindo do forno de terça a domingo.</p>
+
+  <section class="hero">
+    <div class="board" aria-hidden="true"></div>
+    <svg class="arc" viewBox="0 0 100 100" aria-hidden="true">
+      <defs><path id="c" d="M50,50 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
+      <text><textPath href="#c" startOffset="2%">BALCÃO · PIZZA NAPOLETANA · CURITIBA ·</textPath></text>
+    </svg>
+    <div class="pizza"><img src="../img/lg/margherita.jpg" alt="Pizza Margherita"></div>
+    <span class="tag mono">A Rainha</span>
+    <div class="txt">
+      <div class="count mono"><span>01</span><i></i><span>06</span></div>
+      <h2>Margherita</h2>
+      <p>Molho de tomate artesanal, Fior di Latte derretido, parmesão, manjericão fresco e um fio de azeite extravirgem.</p>
+      <div class="pills mono"><span class="pill">Fior di Latte</span><span class="pill">Parmesão</span><span class="pill">Manjericão</span><span class="pill">Azeite</span></div>
+      <div class="buy"><span class="price"><small>R$</small>47,90</span><span class="btn mono">Peça no WhatsApp</span></div>
+    </div>
+  </section>
+ </div>
+
+  <section class="list">
+    <div class="list-head mono"><b>A carta</b><span>Pizzas de 30 cm · 6 pedaços</span></div>
+    <div class="row"><div class="thumb"><img src="../img/diavola.jpg" alt=""></div>
+      <div><h3><span class="n mono">02</span>Diavola <em class="hot">Picante</em></h3>
+      <div class="pills mono"><span class="pill">Pepperoni picante</span><span class="pill">Fior di Latte</span><span class="pill">Manjericão</span></div></div>
+      <span class="price"><small>R$</small>49,90</span></div>
+    <div class="row"><div class="thumb"><img src="../img/gorgonzola.jpg" alt=""></div>
+      <div><h3><span class="n mono">03</span>Gorgonzola &amp; Cogumelo</h3>
+      <div class="pills mono"><span class="pill">Cogumelo Paris</span><span class="pill">Gorgonzola</span><span class="pill">Mussarela</span></div></div>
+      <span class="price"><small>R$</small>49,90</span></div>
+    <div class="row"><div class="thumb"><img src="../img/calabresa.jpg" alt=""></div>
+      <div><h3><span class="n mono">04</span>Calabresa com Cebola <em>A clássica</em></h3>
+      <div class="pills mono"><span class="pill">Calabresa defumada</span><span class="pill">Cebola roxa</span><span class="pill">Mussarela</span></div></div>
+      <span class="price"><small>R$</small>44,90</span></div>
+    <div class="row"><div class="thumb"><img src="../img/tres-queijos.jpg" alt=""></div>
+      <div><h3><span class="n mono">05</span>Três Queijos</h3>
+      <div class="pills mono"><span class="pill">Mussarela</span><span class="pill">Gorgonzola</span><span class="pill">Parmesão</span></div></div>
+      <span class="price"><small>R$</small>44,90</span></div>
+    <div class="row"><div class="thumb"><img src="../img/mussarela.jpg" alt=""></div>
+      <div><h3><span class="n mono">06</span>Mussarela</h3>
+      <div class="pills mono"><span class="pill">Molho artesanal</span><span class="pill">Orégano</span><span class="pill">Azeite</span></div></div>
+      <span class="price"><small>R$</small>44,90</span></div>
+  </section>
+
+  <footer class="foot">
+    <div class="qr"><img src="../panfleto/qr-whats.svg" alt="QR code do WhatsApp"><span class="mono">Pedir</span></div>
+    <div class="info">
+      <img class="logo" src="../img/logo-wine.png" alt="Balcão Pizza Napoletana">
+      <b>(41) 99213-2280</b>
+      <span class="mono">Terça a domingo · 18h às 23h<br>balcaopizza.com.br · @balcaopizzanapoletana</span>
+    </div>
+    <div class="qr"><img src="../panfleto/qr-site.svg" alt="QR code do site"><span class="mono">Cardápio</span></div>
+  </footer>
+</article>
+</div>
+</body>
+</html>
